@@ -23,6 +23,7 @@
   --later: #b49cff;
   --done: #44d68a;
   --inbox: #3fd9d0;
+  --shop: #ff7eb6;
   --danger: #ff6b6b;
   --font-display: "Unbounded", system-ui, sans-serif;
   --font-body: "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
@@ -31,18 +32,18 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); }
-body { color: var(--ink); font-family: var(--font-body); font-size: 16.5px; line-height: 1.4; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; min-height: 100%; }
-.wrap { max-width: 560px; margin: 0 auto; padding: 22px 16px 120px; display: flex; flex-direction: column; gap: 20px; }
+body { color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.35; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; min-height: 100%; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 16px 14px 120px; display: flex; flex-direction: column; gap: 14px; }
 a { color: inherit; }
 
 /* Header */
-header { display: flex; flex-direction: column; gap: 14px; }
+header { display: flex; flex-direction: column; gap: 10px; }
 .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .date { color: var(--muted); font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
-h1 { font-family: var(--font-display); font-weight: 800; font-size: 34px; margin: 4px 0 0; letter-spacing: -0.02em; line-height: 1; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 26px; margin: 3px 0 0; letter-spacing: -0.02em; line-height: 1; }
 h1 span { color: var(--accent); }
-.kudos { font-family: var(--font-mono); font-size: 12px; color: var(--done); margin-top: 8px; }
-.top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.kudos { font-family: var(--font-mono); font-size: 11px; color: var(--done); margin-top: 6px; }
+.top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .sync { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
 .sync .led { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .sync.ok .led { background: var(--done); box-shadow: 0 0 8px var(--done); }
@@ -58,55 +59,55 @@ h1 span { color: var(--accent); }
 
 /* Filter */
 .filter { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 4px; }
-.filter button { flex: 1; font: inherit; font-family: var(--font-display); font-size: 12px; font-weight: 500; letter-spacing: .02em; padding: 9px 6px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+.filter button { flex: 1; font: inherit; font-family: var(--font-display); font-size: 11px; font-weight: 500; letter-spacing: .01em; padding: 8px 4px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
 .filter button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
-.filter button small { font-family: var(--font-mono); font-size: 11px; opacity: .7; margin-left: 4px; }
+.filter button small { font-family: var(--font-mono); font-size: 10px; opacity: .7; margin-left: 4px; }
 
 /* Quick add */
-.add { position: sticky; top: 8px; z-index: 5; background: rgba(11,11,14,.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
+.add { position: sticky; top: 8px; z-index: 5; background: rgba(11,11,14,.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 16px; padding: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
 .add-row { display: flex; gap: 8px; }
-.add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #000; color: var(--ink); }
+.add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--line); background: #000; color: var(--ink); }
 .add input::placeholder { color: var(--muted); }
 .add input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,178,63,.18); }
-.btn { font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 0 18px; cursor: pointer; min-height: 46px; }
+.btn { font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 0 16px; cursor: pointer; min-height: 40px; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); font-family: var(--font-display); font-size: 14px; font-weight: 700; }
 .btn-primary:active { transform: scale(.97); }
 .seg { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .seg-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-right: 2px; }
-.chip { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.chip { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 .chip .d { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
 .chip[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); border-color: var(--c); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Sections */
-section { display: flex; flex-direction: column; gap: 8px; }
+section { display: flex; flex-direction: column; gap: 6px; }
 .sec-head { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 2px; color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
-.pill { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); padding: 5px 11px; border-radius: 999px; }
-.sec-head .hint { color: var(--muted); font-size: 13px; }
+.pill { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); padding: 4px 9px; border-radius: 999px; }
+.sec-head .hint { color: var(--muted); font-size: 12px; }
 .sec-head .count { margin-left: auto; color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
 .sec-head .caret { color: var(--muted); width: 14px; height: 14px; flex: none; transition: transform .2s; }
 section.collapsed .caret { transform: rotate(-90deg); }
 section.collapsed .list { display: none; }
-.list { list-style: none; margin: 0; padding: 4px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: inset 3px 0 0 var(--c); }
-.empty { padding: 16px; color: var(--muted); font-size: 14px; }
+.list { list-style: none; margin: 0; padding: 2px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: inset 3px 0 0 var(--c); }
+.empty { padding: 12px 14px; color: var(--muted); font-size: 13px; }
 
 .task { transition: opacity .3s, transform .3s; }
 .task.leaving { opacity: 0; transform: translateX(24px); }
-.task-main { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px 11px 16px; }
-.check { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c) 70%, var(--muted)); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 0; color: transparent; transition: background .2s, border-color .2s, transform .15s; }
-.check svg { width: 14px; height: 14px; }
+.task-main { display: flex; align-items: flex-start; gap: 10px; padding: 7px 12px 7px 14px; }
+.check { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c) 70%, var(--muted)); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 0; color: transparent; transition: background .2s, border-color .2s, transform .15s; }
+.check svg { width: 12px; height: 12px; }
 .check:active { transform: scale(.88); }
 .task.done .check, .task.ticking .check { background: var(--done); border-color: var(--done); color: #03140a; }
-.task-text { flex: 1; min-width: 0; background: none; border: 0; padding: 3px 0 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.task-text { flex: 1; min-width: 0; background: none; border: 0; padding: 1px 0 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
 .task.done .task-text, .task.ticking .task-text { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
-.tag { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
 .tag.work { color: #ffcf85; border-color: rgba(255,178,63,.25); }
 .when { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
 .task.open { background: var(--surface-2); }
-.actions { display: none; gap: 6px; flex-wrap: wrap; padding: 0 14px 12px 54px; }
+.actions { display: none; gap: 6px; flex-wrap: wrap; padding: 0 12px 10px 46px; }
 .task.open .actions { display: flex; }
 .chip.danger { color: var(--danger); border-color: rgba(255,107,107,.35); }
-.edit { display: none; gap: 8px; padding: 0 14px 12px 54px; }
+.edit { display: none; gap: 8px; padding: 0 12px 10px 46px; }
 .task.editing .edit { display: flex; }
 .task.editing .actions { display: none; }
 .edit input { flex: 1; min-width: 0; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--accent); background: #000; color: var(--ink); }
@@ -117,7 +118,7 @@ section.collapsed .list { display: none; }
 .inbox .list { box-shadow: inset 3px 0 0 var(--inbox); }
 .inbox-note { padding: 12px 16px; font-size: 14px; color: var(--muted); }
 .inbox-note.warn { color: var(--danger); }
-.sugg { padding: 12px 14px 12px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.sugg { padding: 9px 12px 9px 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .sugg:first-child { border-top: 0; }
 .sugg-text { font-weight: 500; }
 .sugg-src { font-family: var(--font-mono); font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -127,7 +128,7 @@ section.collapsed .list { display: none; }
 .linkbtn { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 4px; }
 
 /* Drag */
-.grip { flex: none; width: 34px; height: 34px; margin: -4px -8px -4px 0; display: grid; place-items: center; background: none; border: 0; color: var(--muted); opacity: .55; cursor: grab; touch-action: none; padding: 0; }
+.grip { flex: none; width: 32px; height: 30px; margin: -5px -8px -5px 0; display: grid; place-items: center; background: none; border: 0; color: var(--muted); opacity: .55; cursor: grab; touch-action: none; padding: 0; }
 .grip svg { width: 16px; height: 16px; }
 .grip:active { cursor: grabbing; opacity: 1; }
 .ghost { position: fixed; z-index: 30; pointer-events: none; list-style: none; background: var(--surface-2); border: 1px solid color-mix(in srgb, var(--c) 60%, var(--line)); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,.8); transform: scale(1.02); }
@@ -148,15 +149,20 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 <body>
 <div class="wrap" id="root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
-<script id="state" type="application/json">{"tasks": [{"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "now", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t5", "text": "Office infrastructure message", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "now", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t8", "text": "Book Mumbai flights → then book room for parents", "sec": "now", "tag": "Personal"}, {"id": "t9", "text": "Buy pants for Diwali", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "People"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "next", "tag": "People"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat (around Nov 21)", "sec": "next", "tag": "People"}, {"id": "t14", "text": "Watch for Dad", "sec": "next", "tag": "People"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t98", "text": "Buy Pillow", "sec": "next"}, {"id": "t16", "text": "Blood tests", "sec": "next", "tag": "Errands"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t19", "text": "Head light", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "next", "tag": "Errands"}, {"id": "t21", "text": "Clean shoes", "sec": "next", "tag": "Errands"}, {"id": "t22", "text": "Buy pants – Levi's 555 or 505", "sec": "next", "tag": "Errands"}, {"id": "t23", "text": "Buy slides", "sec": "next", "tag": "Errands"}, {"id": "t24", "text": "Gut health supplement", "sec": "next", "tag": "Errands"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Trips"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Room"}, {"id": "t29", "text": "Buy lighting for room", "sec": "later", "tag": "Room"}, {"id": "t30", "text": "Hang poster", "sec": "later", "tag": "Room"}, {"id": "t31", "text": "Air purifier", "sec": "later", "tag": "Room"}, {"id": "t32", "text": "Cable protector", "sec": "later", "tag": "Room"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "later", "tag": "Room"}, {"id": "t34", "text": "Adjustable weights", "sec": "later", "tag": "Room"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Tech"}, {"id": "t36", "text": "Glean setup", "sec": "later", "tag": "Tech"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "later", "tag": "Tech"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "later", "tag": "Tech"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "later", "tag": "Tech"}, {"id": "t40", "text": "Get IEMs", "sec": "later", "tag": "Tech"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t43", "text": "Buy CBD", "sec": "later", "tag": "Personal"}, {"id": "t44", "text": "Work out or go for a run", "sec": "later", "tag": "Habits"}, {"id": "t45", "text": "Go swimming", "sec": "later", "tag": "Habits"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Habits"}, {"id": "t47", "text": "Drink matcha", "sec": "later", "tag": "Habits"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Habits"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}], "nextId": 99}</script>
+<script id="state" type="application/json">{"tasks": [{"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "now", "tag": "Work"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "now", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t5", "text": "Office infrastructure message", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "now", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t8", "text": "Book Mumbai flights → then book room for parents", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "People"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "next", "tag": "People"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat (around Nov 21)", "sec": "next", "tag": "People"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t16", "text": "Blood tests", "sec": "next", "tag": "Errands"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "next", "tag": "Errands"}, {"id": "t21", "text": "Clean shoes", "sec": "next", "tag": "Errands"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Trips"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Room"}, {"id": "t30", "text": "Hang poster", "sec": "later", "tag": "Room"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Tech"}, {"id": "t36", "text": "Glean setup", "sec": "later", "tag": "Tech"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "later", "tag": "Tech"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "later", "tag": "Tech"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "later", "tag": "Tech"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t44", "text": "Work out or go for a run", "sec": "later", "tag": "Habits"}, {"id": "t45", "text": "Go swimming", "sec": "later", "tag": "Habits"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Habits"}, {"id": "t47", "text": "Drink matcha", "sec": "later", "tag": "Habits"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Habits"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "shop"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t19", "text": "Head light", "sec": "shop"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "shop"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}], "nextId": 103, "inbox": {"lastScan": "2026-11-08T07:41:15.743Z", "items": []}}</script>
 <script id="app">
 (function () {
   var SECS = [
     { key: "now",   label: "Now",   hint: "this week",       c: "var(--now)" },
     { key: "next",  label: "Next",  hint: "next few weeks",  c: "var(--next)" },
     { key: "later", label: "Later", hint: "no rush",         c: "var(--later)" },
-    { key: "done",  label: "Done",  hint: "",                c: "var(--done)" }
+    { key: "done",  label: "Done",  hint: "",                c: "var(--done)" },
+    { key: "shop",  label: "To buy", hint: "",               c: "var(--shop)" },
+    { key: "bought", label: "Bought", hint: "",              c: "var(--done)" }
   ];
+  var TASK_SECS = SECS.slice(0, 4), SHOP_SECS = SECS.slice(4);
+  function isDoneSec(k) { return k === "done" || k === "bought"; }
+  function isShopSec(k) { return k === "shop" || k === "bought"; }
   var M365 = "Microsoft 365";
   var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
   var CARET = '<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
@@ -175,7 +181,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  var collapsed = lsGet("tasks-collapsed", { done: true });
+  var collapsed = lsGet("tasks-collapsed", { done: true, bought: true });
   var filter = lsGet("tasks-filter", "all");
   function saveCollapsed() { lsSet("tasks-collapsed", collapsed); }
 
@@ -195,17 +201,17 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function find(id) { for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i]; return null; }
   function snapshot() { return JSON.stringify(state); }
   function isWork(t) { return t.tag === "Work"; }
-  function visible(t) { return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
+  function visible(t) { if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
   function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
 
   function render() {
-    var counts = { now: 0, next: 0, later: 0, done: 0 }, open = { all: 0, work: 0, personal: 0 };
+    var open = { all: 0, work: 0, personal: 0, shop: 0 };
     state.tasks.forEach(function (t) {
-      if (visible(t)) counts[t.sec] = (counts[t.sec] || 0) + 1;
-      if (t.sec !== "done") { open.all++; if (isWork(t)) open.work++; else open.personal++; }
+      if (t.sec === "shop") open.shop++;
+      else if (!isDoneSec(t.sec) && !isShopSec(t.sec)) { open.all++; if (isWork(t)) open.work++; else open.personal++; }
     });
     var since = weekAgo();
-    var doneWeek = state.tasks.filter(function (t) { return t.sec === "done" && t.doneAt && t.doneAt >= since && visible(t); }).length;
+    var doneWeek = state.tasks.filter(function (t) { return t.sec === "done" && t.doneAt && t.doneAt >= since && (filter === "shop" || visible(t)); }).length;
     var dateStr = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
     var h = "<header>";
@@ -214,33 +220,37 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
          '<div class="top-right"><span class="sync ' + sync.cls + '" id="sync"><span class="led"></span><span id="syncText">' + esc(sync.text) + "</span></span>" +
          '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button></div></div>";
     h += '<div class="filter" role="group" aria-label="Show">';
-    [["all", "All"], ["personal", "Personal"], ["work", "Work"]].forEach(function (f) {
+    [["all", "All"], ["personal", "Personal"], ["work", "Work"], ["shop", "Shopping"]].forEach(function (f) {
       h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "<small>" + open[f[0]] + "</small></button>";
     });
     h += "</div></header>";
 
     h += '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
-         '<input id="addInput" type="text" placeholder="' + (filter === "work" ? "Add a work task…" : "Add a task…") + '" aria-label="New task" enterkeyhint="done">' +
-         '<button class="btn btn-primary" type="submit">Add</button></div><div class="seg" role="group" aria-label="Add to"><span class="seg-label">to</span>';
-    SECS.slice(0, 3).forEach(function (s) {
-      h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
-    });
-    h += "</div></form>";
+         '<input id="addInput" type="text" placeholder="' + (filter === "work" ? "Add a work task…" : filter === "shop" ? "Add something to buy…" : "Add a task…") + '" aria-label="New task" enterkeyhint="done">' +
+         '<button class="btn btn-primary" type="submit">Add</button></div>';
+    if (filter !== "shop") {
+      h += '<div class="seg" role="group" aria-label="Add to"><span class="seg-label">to</span>';
+      SECS.slice(0, 3).forEach(function (s) {
+        h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
+      });
+      h += "</div>";
+    }
+    h += "</form>";
 
-    h += inboxHtml();
+    if (filter !== "shop") h += inboxHtml();
 
-    SECS.forEach(function (s) {
+    (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) {
       var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t); });
       var isCol = !!collapsed[s.key];
       h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
       h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
            (s.hint ? '<span class="hint">' + s.hint + "</span>" : "") + '<span class="count">' + items.length + "</span></button>";
       h += '<ul class="list">';
-      if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Ticked tasks land here." : "Nothing here. Nice.") + "</li>";
-      if (s.key === "done") items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
+      if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Ticked tasks land here." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
+      if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
       items.forEach(function (t) { h += taskHtml(t); });
       h += "</ul>";
-      if (s.key === "done" && items.length && !isCol) h += '<button class="btn clear" data-clear="1">Clear done</button>';
+      if (isDoneSec(s.key) && items.length && !isCol) h += '<button class="btn clear" data-clear="' + s.key + '">' + (s.key === "bought" ? "Clear bought" : "Clear done") + "</button>";
       h += "</section>";
     });
     root.innerHTML = h;
@@ -249,10 +259,11 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   function inboxHtml() {
     var items = state.inbox.items || [];
-    if (!items.length && !scanNote) return "";
+    var note = scanNote || state.inbox.note || null;
+    if (!items.length && !note) return "";
     var h = '<section class="inbox" style="--c:var(--inbox)"><div class="sec-head" style="cursor:default"><span class="pill">From inbox</span><span class="hint">email &amp; Teams</span><span class="count">' + items.length + "</span></div>";
     h += '<ul class="list">';
-    if (scanNote) h += '<li class="inbox-note' + (scanWarn ? " warn" : "") + '">' + esc(scanNote) + "</li>";
+    if (note) h += '<li class="inbox-note' + (scanWarn && scanNote ? " warn" : "") + '">' + esc(note) + "</li>";
     items.forEach(function (s) {
       var url = safeUrl(s.link);
       h += '<li class="sugg"><div class="sugg-text">' + esc(s.text) + "</div>" +
@@ -263,22 +274,26 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
            '<button class="chip" data-skip="' + s.id + '">Dismiss</button></div></li>';
     });
     h += "</ul>";
-    h += '<div class="inbox-foot"><span>Checked ' + esc(ago(state.inbox.lastScan)) + "</span>" + (items.length ? '<button class="linkbtn" data-skipall="1">Dismiss all</button>' : "") + "</div></section>";
+    h += '<div class="inbox-foot"><span>Checked ' + esc(ago(state.inbox.lastScan)) + "</span>" + '<button class="linkbtn" data-skipall="1">' + (items.length ? "Dismiss all" : "Hide") + "</button>" + "</div></section>";
     return h;
   }
 
   function taskHtml(t) {
-    var done = t.sec === "done";
+    var done = isDoneSec(t.sec), shopItem = isShopSec(t.sec);
     var cls = "task" + (done ? " done" : "") + (openId === t.id ? " open" : "") + (editId === t.id ? " editing" : "");
     var h = '<li class="' + cls + '" data-id="' + t.id + '">';
     h += '<div class="task-main"><button class="check" data-check="' + t.id + '" aria-label="' + (done ? "Mark not done: " : "Mark done: ") + esc(t.text) + '">' + CHECK + "</button>";
     h += '<button class="task-text" data-open="' + t.id + '" aria-expanded="' + (openId === t.id) + '">' + esc(t.text) +
-         (t.tag ? '<span class="tag' + (isWork(t) ? " work" : "") + '">' + esc(t.tag) + "</span>" : "") +
-         (done && t.doneAt ? '<span class="when">Done ' + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
+         (t.tag && !shopItem ? '<span class="tag' + (isWork(t) ? " work" : "") + '">' + esc(t.tag) + "</span>" : "") +
+         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
          '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button></div>";
     h += '<div class="actions">';
-    if (!done) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
-    h += '<button class="chip" data-worktoggle="' + t.id + '">' + (isWork(t) ? "Mark personal" : "Mark work") + "</button>";
+    if (!done && !shopItem) {
+      SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
+      h += '<button class="chip" data-worktoggle="' + t.id + '">' + (isWork(t) ? "Mark personal" : "Mark work") + "</button>";
+      h += '<button class="chip" style="--c:var(--shop)" data-toshop="' + t.id + '"><span class="d"></span>To shopping</button>';
+    }
+    if (t.sec === "shop") h += '<button class="chip" style="--c:var(--now)" data-totask="' + t.id + '"><span class="d"></span>Make it a task</button>';
     h += '<button class="chip" data-edit="' + t.id + '">Edit</button><button class="chip danger" data-del="' + t.id + '">Delete</button></div>';
     h += '<form class="edit" data-editform="' + t.id + '"><input id="edit-' + t.id + '" aria-label="Edit task" value="' + esc(t.text) + '" enterkeyhint="done"><button class="btn btn-primary" type="submit">Save</button></form>';
     return h + "</li>";
@@ -330,13 +345,43 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   }
 
   /* ---------- Inbox scan: Outlook + Teams via the viewer's Microsoft 365 connector, Claude picks the action items ---------- */
-  function blocks(res) {
-    var out = [];
-    ((res && res.content) || []).forEach(function (b) {
-      if (b && b.type === "text" && b.text) { try { var o = JSON.parse(b.text); if (o && typeof o === "object" && (o.subject !== undefined || o.summary !== undefined)) out.push(o); } catch (e) {} }
-    });
-    if (!out.length && res && Array.isArray(res.payload)) out = res.payload;
+  /* A text block may hold one JSON object, an array, or several objects back to back. */
+  function parseMulti(text) {
+    try { var o = JSON.parse(text); return Array.isArray(o) ? o : [o]; } catch (e) {}
+    var out = [], depth = 0, inStr = false, bs = false, start = -1;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inStr) { if (bs) bs = false; else if (c === "\\") bs = true; else if (c === '"') inStr = false; continue; }
+      if (c === '"') { inStr = true; continue; }
+      if (c === "{") { if (depth === 0) start = i; depth++; }
+      else if (c === "}" && depth > 0) { depth--; if (depth === 0 && start >= 0) { try { out.push(JSON.parse(text.slice(start, i + 1))); } catch (e) {} start = -1; } }
+    }
     return out;
+  }
+  function blocks(res) {
+    var objs = [];
+    ((res && res.content) || []).forEach(function (b) { if (b && b.type === "text" && b.text) objs = objs.concat(parseMulti(b.text)); });
+    var p = res && res.payload;
+    if (!objs.length && p) objs = Array.isArray(p) ? p : (p.value || p.messages || p.results || [p]);
+    var msgs = [], next = null;
+    objs.forEach(function (o) {
+      if (!o || typeof o !== "object") return;
+      if (o.nextOffset != null) next = o.nextOffset;
+      if (o.subject !== undefined || o.summary !== undefined) msgs.push(o);
+    });
+    return { msgs: msgs, next: next };
+  }
+  function fetchAll(mcp, tool, input, pages) {
+    var all = [];
+    function page(offset, n) {
+      var inp = JSON.parse(JSON.stringify(input)); if (offset) inp.offset = offset;
+      return call(mcp, tool, inp).then(function (res) {
+        var b = blocks(res); all = all.concat(b.msgs);
+        if (b.next != null && n + 1 < pages && b.msgs.length) return page(b.next, n + 1);
+        return all;
+      });
+    }
+    return page(0, 0);
   }
   function mcpMessage(e) {
     var c = e && e.code;
@@ -368,30 +413,34 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       mcp = r[0]; sample = r[1];
       if (!mcp || !sample) throw { code: "not_granted" };
       return Promise.allSettled([
-        call(mcp, "outlook_email_search", { query: "*", afterDateTime: since, limit: 25 }),
-        call(mcp, "chat_message_search", { query: "*", afterDateTime: since, limit: 25 })
+        fetchAll(mcp, "outlook_email_search", { query: "*", afterDateTime: since, limit: 25 }, 2),
+        fetchAll(mcp, "chat_message_search", { query: "*", afterDateTime: since, limit: 25 }, 3)
       ]);
     }).then(function (res) {
       var msgs = [], fails = [];
-      if (res[0].status === "fulfilled") blocks(res[0].value).forEach(function (m) {
+      var nE = 0, nT = 0;
+      if (res[0].status === "fulfilled") res[0].value.forEach(function (m) { nE++;
         msgs.push({ source: "Email", from: m.senderName || m.sender || "", subject: m.subject || "", text: m.summary || "", link: m.webLink || "", at: m.receivedDateTime || "" });
       }); else fails.push(res[0].reason);
-      if (res[1].status === "fulfilled") blocks(res[1].value).forEach(function (m) {
-        msgs.push({ source: "Teams", from: (m.from && m.from.displayName) || "", subject: m.subject || "", text: m.summary || "", link: m.webUrl || "", at: m.createdDateTime || "" });
+      if (res[1].status === "fulfilled") res[1].value.forEach(function (m) { nT++;
+        var fromName = (m.from && m.from.displayName) || "";
+        if (/^praveen raamanaathan$/i.test(fromName)) fromName = "Praveen (you)";
+        msgs.push({ source: "Teams", from: fromName, subject: m.subject || "", text: m.summary || "", link: m.webUrl || "", at: m.createdDateTime || "" });
       }); else fails.push(res[1].reason);
       if (fails.length === 2) throw fails[0];
       var partial = fails.length ? " (" + (res[0].status !== "fulfilled" ? "email" : "Teams") + " couldn't be read: " + mcpMessage(fails[0]) + ")" : "";
-      if (!msgs.length) return { found: [], msgs: msgs, partial: partial };
+      var read = "Read " + (res[0].status === "fulfilled" ? nE + " email" + (nE === 1 ? "" : "s") : "no email") + " and " + (res[1].status === "fulfilled" ? nT + " Teams message" + (nT === 1 ? "" : "s") : "no Teams") + ". ";
+      if (!msgs.length) return { found: [], msgs: msgs, partial: partial, read: read };
       var existing = state.tasks.filter(function (t) { return t.sec !== "done"; }).map(function (t) { return "- " + t.text; })
         .concat((state.inbox.items || []).map(function (s) { return "- " + s.text; })).join("\n");
-      var list = msgs.map(function (m, i) { return "[" + i + "] " + m.source + " from " + (m.from || "unknown") + (m.subject ? " | subject: " + m.subject : "") + " | " + m.text.replace(/\s+/g, " ").slice(0, 400); }).join("\n");
+      var list = msgs.map(function (m, i) { return "[" + i + "] " + m.source + " from " + (m.from || "unknown") + (m.subject ? " | subject: " + m.subject : "") + " | " + m.text.replace(/\s+/g, " ").slice(0, 300); }).join("\n");
       var prompt = "You help Praveen Raamanaathan (Senior Associate at ZoomRx, a pharma market-research company) keep his to-do list.\n" +
         "Below are his recent work emails and Microsoft Teams messages. Pick out ONLY concrete action items that Praveen himself needs to do: direct requests to him, reminders of things pending on him, deadlines, follow-ups he owes.\n" +
         "Ignore: newsletters, marketing, webinars, automated birthday/holiday greetings, general FYIs, messages that need nothing from him, and anything already on his list below.\n" +
-        "Merge duplicates (e.g. repeated reminders about the same thing) into one item.\n\n" +
+        "Merge duplicates (e.g. repeated reminders about the same thing) into one item. Messages marked 'Praveen (you)' are his own: include a task only if he promised to do something.\n\n" +
         "His current list:\n" + (existing || "(empty)") + "\n\nMessages:\n" + list + "\n\n" +
         'Reply with JSON only: an array (at most 8) of {"text": short imperative task, max 70 characters, "ref": index of the main source message}. Reply [] if there are none.';
-      return sample.json(prompt).catch(function (e) { throw { sample: true, code: e && e.code, message: e && e.message }; }).then(function (v) { return { found: Array.isArray(v) ? v : (v && v.items) || [], msgs: msgs, partial: partial }; });
+      return sample.json(prompt).catch(function (e) { throw { sample: true, code: e && e.code, message: e && e.message }; }).then(function (v) { return { found: Array.isArray(v) ? v : (v && v.items) || [], msgs: msgs, partial: partial, read: read }; });
     }).then(function (r) {
       var n = 0;
       r.found.forEach(function (f) {
@@ -401,8 +450,8 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
         n++;
       });
       state.inbox.lastScan = started;
-      scanNote = (n ? n + " new action item" + (n === 1 ? "" : "s") + " found." : "Nothing new that needs you.") + r.partial;
-      scanWarn = !!r.partial; scanning = false;
+      scanNote = r.read + (n ? n + " new action item" + (n === 1 ? "" : "s") + " found." : "Nothing new that needs you.") + r.partial;
+      scanWarn = !!r.partial; scanning = false; state.inbox.note = scanNote;
       changed();
     }).catch(function (e) {
       scanning = false; scanWarn = true;
@@ -438,22 +487,25 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       changed(); return;
     }
     if (d.skip) { state.inbox.items = state.inbox.items.filter(function (x) { return x.id !== d.skip; }); if (!state.inbox.items.length) scanNote = null; changed(); return; }
-    if (d.skipall) { var snapS = snapshot(); state.inbox.items = []; scanNote = null; showToast("Dismissed inbox suggestions", snapS); changed(); return; }
+    if (d.skipall) { var snapS = snapshot(); state.inbox.items = []; scanNote = null; delete state.inbox.note; showToast("Dismissed inbox suggestions", snapS); changed(); return; }
     if (d.check) {
       var t = find(d.check); if (!t) return;
       var snap = snapshot();
-      if (t.sec === "done") {
-        t.sec = t.from || "now"; delete t.from; delete t.doneAt; openId = null;
+      if (isDoneSec(t.sec)) {
+        t.sec = t.from || (t.sec === "bought" ? "shop" : "now"); delete t.from; delete t.doneAt; openId = null;
         showToast("Moved back to " + t.sec.charAt(0).toUpperCase() + t.sec.slice(1), snap); changed(); return;
       }
       var li = b.closest(".task"); li.classList.add("ticking");
       setTimeout(function () { li.classList.add("leaving"); }, 220);
       setTimeout(function () {
-        t.from = t.sec; t.sec = "done"; t.doneAt = today(); openId = null; editId = null;
-        showToast("Done: " + t.text, snap); changed();
+        var toShop = t.sec === "shop";
+        t.from = t.sec; t.sec = toShop ? "bought" : "done"; t.doneAt = today(); openId = null; editId = null;
+        showToast((toShop ? "Bought: " : "Done: ") + t.text, snap); changed();
       }, 520);
       return;
     }
+    if (d.toshop) { var ts = find(d.toshop); if (ts) { var sn1 = snapshot(); ts.sec = "shop"; delete ts.tag; openId = null; showToast("Moved to Shopping: " + ts.text, sn1); changed(); } return; }
+    if (d.totask) { var tt = find(d.totask); if (tt) { var sn2 = snapshot(); tt.sec = "next"; tt.tag = "Personal"; openId = null; showToast("Moved to Next: " + tt.text, sn2); changed(); } return; }
     if (d.move) { var m = find(d.move); if (m) { m.sec = d.to; openId = null; changed(); } return; }
     if (d.del) {
       var snapD = snapshot(), del = find(d.del);
@@ -461,9 +513,10 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       showToast("Deleted: " + (del ? del.text : "task"), snapD); changed(); return;
     }
     if (d.clear) {
-      var snapC = snapshot(), gone = state.tasks.filter(function (x) { return x.sec === "done" && visible(x); }).length;
-      state.tasks = state.tasks.filter(function (x) { return !(x.sec === "done" && visible(x)); });
-      showToast("Cleared " + gone + " done task" + (gone === 1 ? "" : "s"), snapC); changed(); return;
+      var ck = d.clear === "bought" ? "bought" : "done";
+      var snapC = snapshot(), gone = state.tasks.filter(function (x) { return x.sec === ck && visible(x); }).length;
+      state.tasks = state.tasks.filter(function (x) { return !(x.sec === ck && visible(x)); });
+      showToast("Cleared " + gone + (ck === "bought" ? " bought item" : " done task") + (gone === 1 ? "" : "s"), snapC); changed(); return;
     }
   });
 
@@ -477,10 +530,10 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     }
     var input = document.getElementById("addInput");
     var text = (input.value || "").trim(); if (!text) return;
-    var task = { id: "t" + (state.nextId++), text: text, sec: addSec };
+    var task = { id: "t" + (state.nextId++), text: text, sec: filter === "shop" ? "shop" : addSec };
     if (filter === "work") task.tag = "Work"; else if (filter === "personal") task.tag = "Personal";
     state.tasks.unshift(task);
-    if (collapsed[addSec]) { collapsed[addSec] = false; saveCollapsed(); }
+    if (collapsed[task.sec]) { collapsed[task.sec] = false; saveCollapsed(); }
     changed();
     var again = document.getElementById("addInput"); if (again) again.focus();
   });
@@ -550,8 +603,8 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     if (cancel || !sec || !t) { render(); return; }
     var before = snapshot(), prev = t.sec;
     state.tasks = state.tasks.filter(function (x) { return x !== t; });
-    if (sec === "done" && prev !== "done") { t.from = prev; t.doneAt = today(); }
-    if (sec !== "done" && prev === "done") { delete t.from; delete t.doneAt; }
+    if (isDoneSec(sec) && !isDoneSec(prev)) { t.from = prev; t.doneAt = today(); }
+    if (!isDoneSec(sec) && isDoneSec(prev)) { delete t.from; delete t.doneAt; }
     t.sec = sec;
     var idx = -1, i;
     if (beforeId) { for (i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === beforeId) { idx = i; break; } }
@@ -560,7 +613,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     if (idx < 0) state.tasks.push(t); else state.tasks.splice(idx, 0, t);
     openId = null; editId = null;
     if (snapshot() === before) { render(); return; }
-    if (sec !== prev) showToast("Moved to " + sec.charAt(0).toUpperCase() + sec.slice(1) + ": " + t.text, before);
+    if (sec !== prev) showToast("Moved to " + (sec === "shop" ? "To buy" : sec.charAt(0).toUpperCase() + sec.slice(1)) + ": " + t.text, before);
     changed();
   }
   document.addEventListener("pointerup", function () { if (drag) endDrag(false); });
