@@ -279,7 +279,7 @@ function renderBreakdowns() {
     if (!inPeriod(t)) continue;
     const e = eff(t);
     if (e.spend) { (byCat[e.cat] ||= [0, 0]); byCat[e.cat][0] += e.spend; byCat[e.cat][1]++; }
-    if (e.spend && e.cat !== "HDFC card (not itemised)") { (byMer[t.merchant] ||= [0, 0]); byMer[t.merchant][0] += e.spend; byMer[t.merchant][1]++; }
+    if (e.spend) { (byMer[t.merchant] ||= [0, 0]); byMer[t.merchant][0] += e.spend; byMer[t.merchant][1]++; }
     if (e.income) { (byInc[e.cat] ||= [0, 0]); byInc[e.cat][0] += e.income; byInc[e.cat][1]++; }
   }
   const sorted = o => Object.entries(o).map(([k, [v, n]]) => [k, v, n]).filter(e => Math.abs(e[1]) > 0.5).sort((a, b) => b[1] - a[1]);

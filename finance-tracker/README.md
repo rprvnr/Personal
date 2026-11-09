@@ -9,7 +9,7 @@ outside this repo (see `.gitignore`); only the code is committed.
 ## Files
 
 - `rules.py`: categories and the rules that map statement lines to merchants and categories.
-- `parse.py`: reads the statements into `transactions.json`.
+- `parse.py`: reads the statements into `transactions.json`. HDFC Pixel card PDFs need `HDFC_CARD_PASSWORD` set in the environment.
 - `build.py`: builds `index.html` (the dashboard) and `money-tracker.xlsx`.
 - `template.html`: the dashboard page; data is injected at build time.
 

@@ -23,17 +23,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def gaps(tx):
-    hdfc_card = sum(t["amount"] for t in tx if t["category"] == "HDFC card (not itemised)")
     lak_out = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "out")
     lak_in = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "in")
     out = []
-    if hdfc_card:
-        out.append({"title": "HDFC credit card purchases aren't itemised yet.",
-                    "detail": f"₹{hdfc_card:,.0f} of bill payments is counted as one category, in the month "
-                              "you paid. Adding the HDFC card statements will split it into real merchants."})
+    out.append({"title": "HDFC Pixel card purchases from 15 Oct onward are missing.",
+                "detail": "The last emailed statement ends 14 Oct; the next one arrives around 15 Nov. "
+                          "Rent for November and any other spends on that card since 15 Oct aren't counted yet."})
     out.append({"title": "3 Axis card transactions from Oct–Nov are missing.",
-                "detail": "The card app lists 74 unbilled transactions and the screenshots show 71. The likely "
-                          "gaps are 13–14 Oct and 26 Oct. They'll appear once the November statement is out."})
+                "detail": "The card app lists 74 unbilled transactions and the screenshots show 71. They fall on "
+                          "13–14 Oct or around 26–27 Oct. They'll appear in the November statement."})
     if lak_out or lak_in:
         out.append({"title": "Lakshana B is treated as lending.",
                     "detail": f"₹{lak_out:,.0f} sent and ₹{lak_in:,.0f} received, none of it counted. "

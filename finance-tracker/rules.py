@@ -12,6 +12,7 @@ CATEGORIES = {
     "Interest & cashback": "income",
     "From Dad": "income",
     "Other income": "income",
+    "Rent": "spend",
     "Food delivery": "spend",
     "Groceries & quick commerce": "spend",
     "Dining out": "spend",
@@ -22,7 +23,7 @@ CATEGORIES = {
     "Health & medical": "spend",
     "Entertainment": "spend",
     "Travel & stays": "spend",
-    "Local transport": "spend",
+    "Transport & fuel": "spend",
     "Subscriptions & apps": "spend",
     "Phone & internet": "spend",
     "Insurance": "spend",
@@ -32,7 +33,6 @@ CATEGORIES = {
     "Splits with friends": "spend",
     "Payments to people": "spend",
     "Fees & charges": "spend",
-    "HDFC card (not itemised)": "spend",
     "Other spending": "spend",
     "Own-account transfers": "excluded",
     "Card bill payments": "excluded",
@@ -52,9 +52,11 @@ def rule(pattern, merchant, category, review=False, note=""):
 # ---- transfers between own accounts, card bills, family, friends ----
 rule(r"MOB/SELFFT|PRAVEEN ?RAAMANAATHAN|UPI/P2A/.*/PRAVEEN R/|IMPS/MRT/.*918525094643",
      "Own account", "Own-account transfers")
-rule(r"HDFC BANK DIGITAL CR", "HDFC credit card bill", "HDFC card (not itemised)", True,
-     "Paid to HDFC credit card. Counted as spending until the HDFC card statement is added.")
+rule(r"HDFC BANK DIGITAL CR", "HDFC credit card bill", "Card bill payments")
 rule(r"CREDITCARD PAYMENT|^MB PAYMENT", "Axis credit card bill", "Card bill payments")
+rule(r"^PAYMENT RECEIVED", "Card bill payment", "Card bill payments")
+rule(r"FUEL SURCHARGE REVERSAL", "Fuel surcharge refund", "Transport & fuel")
+rule(r"TRULIV", "Truliv (rent)", "Rent")
 rule(r"ARULALAN", "Dad", "DAD", False, "")
 rule(r"LAKSHANA", "Lakshana B", "Friends: lending & repayments", True,
      "Assumed lending or repayment.")
@@ -80,7 +82,8 @@ rule(r"ATM|^ATW-|^NWD-", "ATM withdrawal", "Cash withdrawals")
 rule(r"SWIGGY INSTAMART|SWIGGY E COM", "Swiggy Instamart", "Groceries & quick commerce")
 rule(r"SWIGGY|BUNDL TECHNOLOGIES", "Swiggy", "Food delivery")
 rule(r"EAT GOOD TECH|EATCLUB", "EatClub", "Food delivery")
-rule(r"ETERNAL LIMITED", "Zomato", "Food delivery")
+rule(r"ETERNAL LIMITED|ZOMATO", "Zomato", "Food delivery")
+rule(r"JUBILANT|DOMINOS", "Domino's", "Food delivery")
 rule(r"HUNGERBOX", "Hungerbox", "Office meals")
 rule(r"ZEPTO", "Zepto", "Groceries & quick commerce")
 rule(r"BLINKIT|BLINK COMMERCE", "Blinkit", "Groceries & quick commerce")
@@ -92,25 +95,28 @@ rule(r"RAYARS|RAMESHWARAM|CHAAYOS|ANDHRA MEALS|PRASANAM|HOT N SPICY|MOMO|CAKES|G
      r"KATI ROLL|JUICE|BLACK PEKOE|MANOJ BHAVAN|BALAAJEE|CHARMINAR|GREMS|RAJ PALACE|WELCOME HOTEL|"
      r"COZZY|GHAR KA KHANA|MAISON|SUBZERO|SWEETS|BUTTER MILK|COOL BAR|TEA |TEA$|TEA-|COFFEE|"
      r"CIACCO|MOUTAN|NANDHANA|HOTEL HALEZ|SRM HOTELS|BOARD ROOM|SHILTON|SHEESHA|HARI  CATERS|"
-     r"SNACKS|MAYURA|WHITE TOWN|REFRESHING", None, "Dining out")
+     r"SNACKS|MAYURA|WHITE TOWN|REFRESHING|MITHAI|IBACO|CULINARY BRANDS|BIRYANI|PON VASANTHAM|YAMANAGA", None, "Dining out")
 
 # ---- shopping / personal ----
 rule(r"FLIPKART", "Flipkart", "Shopping")
+rule(r"MYNTRA", "Myntra", "Shopping")
+rule(r"^ASSPL|AMAZON", "Amazon", "Shopping")
 rule(r"LIFE STYLE|LEVIS|JOCKEY|VICTORIA|KHADI|VARAMAHALAKSHMI|VUMMIDI|ZIMSON|HIDESIDE|TUCKED IN|"
      r"LYNK CRAFTS|BLUETYGA|EKAYARS|DAILYOBJECTS|CROSSWORD|BESTBUY|HINDUSTAN TRADING|"
      r"EVERYDAY INTENTION|ONESTO|WATERSCIENCE|TEA NURSERY|FLOWER|JON ENTERPRISE|HEMA ENTERPRISES|"
-     r"SHANSCO", None, "Shopping")
-rule(r"SEPHORA|HAIRWAYS|INNOVIST", None, "Personal care")
+     r"SHANSCO|UGAOO|AURIGLO|PATTABHIRAMA", None, "Shopping")
+rule(r"SEPHORA|HAIRWAYS|INNOVIST|DOT & KEY|RELEAF", None, "Personal care")
 
 # ---- health ----
-rule(r"DENTAL|APOLLO|ANDERSON|MEDPLUS|PHARMAC|SPECIALITY|CAPZ N TABZ", None, "Health & medical")
+rule(r"DENTAL|APOLLO|ANDERSON|MEDPLUS|PHARMAC|SPECIALITY|CAPZ N TABZ|MEDICALS|NUTRITION", None,
+     "Health & medical")
 
 # ---- entertainment / travel / transport ----
 rule(r"BOOKMYSHOW", "BookMyShow", "Entertainment")
 rule(r"PVR|KICKASS", None, "Entertainment")
 rule(r"AGODA|MAKEMYTRIP|REDBUS|CONFIRM TICKET|ALLBEST TRAVELS|MANGALORE CONSOLIDATED", None,
      "Travel & stays")
-rule(r"ROPPEN|RAPIDO|PARKI|ADANI", None, "Local transport")
+rule(r"ROPPEN|RAPIDO|PARKI|ADANI|SERVICE STATION|PETROL|FUEL", None, "Transport & fuel")
 
 # ---- bills / subscriptions ----
 rule(r"APPLE", "Apple", "Subscriptions & apps")

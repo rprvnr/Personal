@@ -7,6 +7,7 @@ Expected files in <data_dir> (raw statements stay outside the repo):
   axis_savings_*.csv      Axis account statement CSV (one file per account)
   axis_card_*.xlsx        Axis credit card monthly statement (xlsx export)
   axis_card_unbilled.csv  date,desc,amount,dc  (hand-entered unbilled rows)
+  hdfc_card_*.pdf         HDFC Pixel card statement PDFs; set HDFC_CARD_PASSWORD to open them
 """
 import csv
 import glob
@@ -95,6 +96,41 @@ def parse_axis_card(path):
         add(date, "Axis Card ··1282", str(r[1]), num(r[3]), direction, os.path.basename(path))
 
 
+HDFC_LINE = re.compile(r"^(\d{1,2}) ?([A-Za-z]{3,4}) ?(\d{4}), ?\d\d:\d\d (.*?)(?: \+\d+)? ?(\+?)₹([\d,]+\.\d\d)$")
+
+
+def parse_hdfc_card(path, password):
+    """HDFC Pixel consolidated statement PDF (password protected). Uses pdftotext -raw."""
+    import subprocess
+    text = subprocess.run(["pdftotext", "-upw", password, "-raw", path, "-"], capture_output=True,
+                          text=True, check=True).stdout
+    card, buf = "", ""
+    for line in text.splitlines():
+        line = line.strip()
+        m = re.match(r"Card no\. ?XX(\d{4}) - (\w+)", line)
+        if m:
+            card = f"HDFC Pixel {m.group(2)} ··{m.group(1)}"
+            continue
+        if re.match(r"^\d{1,2} ?[A-Za-z]{3,4} ?\d{4},", line):
+            buf = line
+        elif buf:
+            buf += " " + line
+        else:
+            continue
+        m = HDFC_LINE.match(buf)
+        if not m:
+            if len(buf) > 400:
+                buf = ""
+            continue
+        buf = ""
+        day, mon, year, desc, plus, amt = m.groups()
+        date = datetime.strptime(f"{day} {mon[:3]} {year}", "%d %b %Y").date().isoformat()
+        if date < "2026-04-01":
+            continue
+        desc = re.sub(r"\s+IND$", "", desc.replace("Paym ent", "Payment")).strip()
+        add(date, card or "HDFC Pixel card", desc, num(amt), "in" if plus else "out", os.path.basename(path))
+
+
 def parse_unbilled(path):
     with open(path, newline="") as f:
         for row in csv.DictReader(f):
@@ -110,6 +146,10 @@ def main(data_dir, out_path):
         parse_axis_savings(p)
     for p in sorted(glob.glob(os.path.join(data_dir, "axis_card_*.xlsx"))):
         parse_axis_card(p)
+    pw = os.environ.get("HDFC_CARD_PASSWORD")
+    for p in sorted(glob.glob(os.path.join(data_dir, "hdfc_card_*.pdf"))):
+        if pw:
+            parse_hdfc_card(p, pw)
     unbilled = os.path.join(data_dir, "axis_card_unbilled.csv")
     if os.path.exists(unbilled):
         parse_unbilled(unbilled)
