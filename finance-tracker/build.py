@@ -30,10 +30,11 @@ def gaps(tx):
                     "detail": "They'll be checked against the statement that arrives around 15–18 Nov. "
                               "Anything HDFC didn't send an alert for will only show up then."})
     unclear = sum(t["amount"] if t["dir"] == "out" else -t["amount"] for t in tx
-                  if t.get("sub", "").startswith("Swiggy (food, Instamart"))
+                  if t.get("sub", "").startswith("Swiggy orders (food or Instamart"))
     if unclear > 0:
-        out.append({"title": f"₹{unclear:,.0f} of Swiggy can't be split into food, Instamart or Dineout.",
-                    "detail": "The card statements only say 'Swiggy'. Your Swiggy order history would settle it."})
+        out.append({"title": f"₹{unclear:,.0f} of small Swiggy charges aren't labelled food or Instamart.",
+                    "detail": "They're counted as food delivery. Generic Swiggy charges of ₹1,000+ are "
+                              "counted as Dineout restaurant bills under Dining out."})
     cash = os.environ.get("CASH_ON_HAND")
     if cash:
         out.append({"title": f"Cash on hand: ₹{float(cash):,.0f}.",

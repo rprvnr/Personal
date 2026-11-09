@@ -177,6 +177,12 @@ def categorise(desc, amount, direction, account, date):
                 if direction == "in":
                     return {"merchant": "Dad", "category": "From Dad", "review": False, "note": ""}
                 return {"merchant": "Dad", "category": "Family transfers", "review": True, "note": ""}
+            # Generic Swiggy charges of ₹1,000+ are almost always Dineout restaurant bills; the
+            # statement doesn't say. Food orders and Instamart run smaller.
+            if (m == "Swiggy" and amount >= 1000 and direction == "out"
+                    and not re.search(r"FOOD|PVT LTD FO|INSTAMART|E COM", u)):
+                return {"merchant": "Swiggy Dineout", "category": "Dining out", "review": False,
+                        "note": "Likely a Dineout restaurant bill (₹1,000+ on a generic Swiggy charge)."}
             if cat == "Salary" and amount > 150000:
                 note = "Much larger than the usual salary; probably a bonus or settlement."
             # Refunds into a spend category stay in that category and reduce its total.
@@ -202,7 +208,7 @@ def categorise(desc, amount, direction, account, date):
 # Dineout, and the statement doesn't say which.
 SUB_RULES = [
     ("Food delivery", r"SWIGGY.*(FOOD|PVT LTD FO)|BUNDL", "Swiggy food delivery"),
-    ("Food delivery", r"SWIGGY", "Swiggy (food, Instamart or Dineout: unclear)"),
+    ("Food delivery", r"SWIGGY", "Swiggy orders (food or Instamart, unlabelled)"),
     ("Food delivery", r"ZOMATO|ETERNAL", "Zomato"),
     ("Food delivery", r"EATCLUB|EAT GOOD", "EatClub"),
     ("Food delivery", r"DOMINO|JUBILANT", "Domino's"),
@@ -212,6 +218,7 @@ SUB_RULES = [
     ("Groceries & quick commerce", r"BIGBASKET|INNOVATIVE RETAIL", "BigBasket"),
     ("Groceries & quick commerce", r".", "Milk, vegetables & local stores"),
     ("Dining out", r"DISTRICT", "Restaurants paid via District"),
+    ("Dining out", r"SWIGGY", "Restaurants paid via Swiggy Dineout"),
     ("Dining out", r"COFFEE|CAFE|STARBUCKS|CHAAYOS|TEA|PEKOE|JUICE|COOL BAR|BUTTER MILK|COZZY|"
                    r"REFRESHING|CAKES|SWEETS|MITHAI|IBACO|SUBZERO|MAISON", "Cafés, tea, sweets & desserts"),
     ("Dining out", r"BOARD ROOM|SHEESHA|SHILTON|YAMANAGA", "Bars, pubs & lounges"),
@@ -236,6 +243,9 @@ SUB_RULES = [
     ("Subscriptions & apps", r"APPLE", "Apple (iCloud, App Store)"),
     ("Subscriptions & apps", r"YOUTUBE|GOOGLE", "Google & YouTube"),
     ("Entertainment", r"BOOKMYSHOW|KARTHIKEYAN|BHAVANI", "Event tickets (BookMyShow)"),
+    ("Household (with Lakshana)", r"DENTAL", "Paid for Lakshana: dental"),
+    ("Household (with Lakshana)", r"BOOKMYSHOW", "Her ticket share"),
+    ("Household (with Lakshana)", r".", "Money sent / received"),
     ("Splits with friends", r"CASH", "Paid in cash"),
     ("Entertainment", r"PVR", "Movies"),
 ]
