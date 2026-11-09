@@ -39,18 +39,18 @@ body { color: var(--ink); font-family: var(--font-body); font-size: 15px; line-h
 a { color: inherit; }
 
 /* Header */
-header { display: flex; flex-direction: column; gap: 10px; }
-.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+header { display: flex; flex-direction: column; gap: 12px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; }
 .date { color: var(--muted); font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
-h1 { font-family: var(--font-display); font-weight: 700; font-size: 28px; margin: 3px 0 0; letter-spacing: -0.03em; line-height: 1; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin: 0; letter-spacing: -0.02em; line-height: 1.1; }
 h1 span { color: var(--accent); }
 .kudos { font-family: var(--font-mono); font-size: 11px; color: var(--done); margin-top: 6px; }
-.top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.sync { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.top-right { display: flex; align-items: center; gap: 10px; }
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .sync .led { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-.sync.ok .led { background: var(--done); box-shadow: 0 0 8px var(--done); }
-.sync.busy .led { background: var(--accent); animation: pulse 1s infinite; }
-.sync.warn { color: var(--danger); border-color: rgba(255,107,107,.4); }
+.sync.ok .led { background: var(--done); opacity: .7; }
+.sync.busy .led { background: var(--muted); animation: pulse 1s infinite; }
+.sync.warn { color: var(--danger); }
 .sync.warn .led { background: var(--danger); }
 @keyframes pulse { 50% { opacity: .3; } }
 .scan { font: inherit; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--inbox) 45%, transparent); background: color-mix(in srgb, var(--inbox) 10%, transparent); color: var(--inbox); cursor: pointer; white-space: nowrap; }
@@ -61,11 +61,14 @@ h1 span { color: var(--accent); }
 
 /* Filter */
 .filter { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 4px; }
-.filter button { flex: 1; font: inherit; font-family: var(--font-display); font-size: 11px; font-weight: 500; letter-spacing: .01em; padding: 8px 4px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+.filter button { flex: 1; font: inherit; font-family: var(--font-display); font-size: 13px; font-weight: 600; padding: 8px 4px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
 .filter button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
 .filter button small { font-family: var(--font-mono); font-size: 10px; opacity: .7; margin-left: 4px; }
 
 /* Quick add */
+.add-toggle { font: inherit; font-size: 15px; font-weight: 600; text-align: left; padding: 10px 14px; border-radius: 12px; border: 1px dashed var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.add-toggle:active { background: var(--surface); }
+.x { font: inherit; font-size: 22px; line-height: 1; width: 40px; min-height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); cursor: pointer; }
 .add { position: relative; z-index: 5; background: rgba(11,11,14,.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 16px; padding: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
 .add-row { display: flex; gap: 8px; }
 .add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--line); background: #000; color: var(--ink); }
@@ -99,7 +102,7 @@ section.collapsed .list { display: none; }
 
 .task { transition: opacity .3s, transform .3s; }
 .task.leaving { opacity: 0; transform: translateX(24px); }
-.task-main { display: flex; align-items: flex-start; gap: 10px; padding: 7px 12px 7px 14px; }
+.task-main { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; display: flex; align-items: flex-start; gap: 10px; padding: 7px 12px 7px 14px; }
 .check { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c) 70%, var(--muted)); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 0; color: transparent; transition: background .2s, border-color .2s, transform .15s; }
 .check svg { width: 12px; height: 12px; }
 .check:active { transform: scale(.88); }
@@ -211,7 +214,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function isDoneSec(k) { return k === "done" || k === "bought"; }
   function isShopSec(k) { return k === "shop" || k === "bought"; }
   var M365 = "Microsoft 365", FLOW = "Wispr Flow";
-  var TAGS = ["Work", "Personal", "Errands", "Home", "Goals"];
+  var TAGS = ["Work", "Personal", "Errands", "Home", "Goals"], PTAGS = ["Personal", "Errands", "Home", "Goals"];
   function tagColor(tg) { return TAGS.indexOf(tg) >= 0 ? "var(--t-" + tg.toLowerCase() + ")" : "var(--muted)"; }
   var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
   var CARET = '<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
@@ -234,7 +237,9 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   var collapsed = lsGet("tasks-collapsed", { done: true, bought: true });
-  var filter = lsGet("tasks-filter", "all");
+  var filter = lsGet("tasks-filter", "personal");
+  if (filter === "all") filter = "personal";
+  var addOpen = false, suppressClick = false;
   function saveCollapsed() { lsSet("tasks-collapsed", collapsed); }
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
@@ -253,7 +258,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function find(id) { for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i]; return null; }
   function snapshot() { return JSON.stringify(state); }
   function isWork(t) { return t.tag === "Work"; }
-  function visible(t) { if (filter === "daily") return false; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
+  function visible(t) { if (filter === "daily") return false; if (filter === "all") filter = "personal"; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
   function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
 
   /* ---------- Daily routines ---------- */
@@ -278,7 +283,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   function todayStripHtml() {
     if (!state.routines.length) return "";
-    var k = keyFor(0), h = '<div class="today" role="group" aria-label="Today\'s routines"><span class="today-label">Today</span>';
+    var k = keyFor(0), h = '<div class="today" role="group" aria-label="Today\'s routines">';
     state.routines.forEach(function (r) {
       var c = rcount(r, k);
       h += '<button type="button" class="rchip' + (c >= r.times ? " full" : "") + '" data-rtap="' + r.id + '" aria-label="' + esc(r.name) + ": " + c + " of " + r.times + '">' + esc(r.name) + pipsHtml(r, c) + "</button>";
@@ -310,29 +315,18 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     });
     h += "</ul></section>";
     h += '<form class="r-add" id="rAdd" autocomplete="off"><input id="rAddInput" type="text" placeholder="Add a routine (e.g. Drink water)" aria-label="New routine" enterkeyhint="done"><button class="btn" type="submit">Add</button></form>';
-    h += '<div class="hint-line">Tap a circle when you\'ve done it. Tap a routine\'s name to change how many times a day. Use ‹ to fill in a day you missed logging.</div>';
     return h;
   }
 
   function render() {
-    var open = { all: 0, work: 0, personal: 0, shop: 0 };
-    state.tasks.forEach(function (t) {
-      if (t.sec === "shop") open.shop++;
-      else if (!isDoneSec(t.sec) && !isShopSec(t.sec)) { open.all++; if (isWork(t)) open.work++; else open.personal++; }
-    });
-    var since = weekAgo();
-    var doneWeek = state.tasks.filter(function (t) { return t.sec === "done" && t.doneAt && t.doneAt >= since && (filter === "shop" || visible(t)); }).length;
-    var dateStr = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-
+    var dateStr = new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
     var h = "<header>";
-    h += '<div class="top"><div><div class="date">' + esc(dateStr) + '</div><h1>Tasks<span>.</span></h1>' +
-         (doneWeek ? '<div class="kudos">' + doneWeek + " done this week</div>" : "") + "</div>" +
-         '<div class="top-right"><span class="sync ' + sync.cls + '" id="sync"><span class="led"></span><span id="syncText">' + esc(sync.text) + "</span></span>" +
-         '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button></div></div>";
+    h += '<div class="top"><h1>' + esc(dateStr) + '</h1><div class="top-right">' +
+         (filter === "work" ? '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button>" : "") +
+         '<span class="sync ' + sync.cls + '" id="sync" title="' + esc(sync.text) + '"><span class="led"></span><span id="syncText">' + (sync.cls === "warn" ? esc(sync.text) : "") + "</span></span></div></div>";
     h += '<div class="filter" role="group" aria-label="Show">';
-    open.daily = todayDone() + "/" + state.routines.length;
-    [["all", "All"], ["personal", "Personal"], ["work", "Work"], ["shop", "Shop"], ["daily", "Daily"]].forEach(function (f) {
-      h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "<small>" + open[f[0]] + "</small></button>";
+    [["personal", "Personal"], ["work", "Work"], ["shop", "Shop"], ["daily", "Daily"]].forEach(function (f) {
+      h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "</button>";
     });
     h += "</div></header>";
 
@@ -341,31 +335,17 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       if (editR) { var re = document.getElementById("redit-" + editR); if (re) re.focus(); }
       return;
     }
-    if (filter !== "shop") h += todayStripHtml();
+    if (filter === "personal") h += todayStripHtml();
 
-    h += '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
-         '<input id="addInput" type="text" placeholder="' + (filter === "work" ? "Add a work task…" : filter === "shop" ? "Add something to buy…" : "Add a task…") + '" aria-label="New task" enterkeyhint="done">' +
-         '<button class="btn btn-primary" type="submit">Add</button></div>';
-    if (filter !== "shop") {
-      h += '<div class="seg" role="group" aria-label="Add to"><span class="seg-label">to</span>';
-      SECS.slice(0, 3).forEach(function (s) {
-        h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
-      });
-      var curTag = addTag || (filter === "work" ? "Work" : null);
-      h += '<span class="divider" aria-hidden="true"></span>';
-      TAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
-      h += "</div>";
-    }
-    h += "</form>";
-
-    if (filter !== "shop") h += inboxHtml();
+    h += addHtml();
+    if (filter === "work") h += inboxHtml();
 
     (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) {
       var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t); });
       var isCol = !!collapsed[s.key];
       h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
       h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
-           (s.hint ? '<span class="hint">' + s.hint + "</span>" : "") + '<span class="count">' + items.length + "</span></button>";
+           (isDoneSec(s.key) ? '<span class="count">' + items.length + "</span>" : "") + "</button>";
       h += '<ul class="list">';
       if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Ticked tasks land here." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
       if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
@@ -375,7 +355,30 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       h += "</section>";
     });
     root.innerHTML = h;
+    if (addOpen && focusAdd) { focusAdd = false; var ai = document.getElementById("addInput"); if (ai) ai.focus(); }
     if (editId) { var ei = document.getElementById("edit-" + editId); if (ei) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
+  }
+
+  var focusAdd = false;
+  function addHtml() {
+    var shop = filter === "shop", label = shop ? "Add item" : "Add task";
+    if (!addOpen) return '<button type="button" class="add-toggle" data-addopen="1">+ ' + label + "</button>";
+    var h = '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
+      '<input id="addInput" type="text" placeholder="' + (shop ? "What do you need to buy?" : "What needs doing?") + '" aria-label="' + label + '" enterkeyhint="done">' +
+      '<button class="btn btn-primary" type="submit">Add</button><button type="button" class="x" data-addclose="1" aria-label="Close">×</button></div>';
+    if (!shop) {
+      h += '<div class="seg" role="group" aria-label="Add to">';
+      SECS.slice(0, 3).forEach(function (s) {
+        h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
+      });
+      if (filter === "personal") {
+        var curTag = addTag || "Personal";
+        h += '<span class="divider" aria-hidden="true"></span>';
+        PTAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
+      }
+      h += "</div>";
+    }
+    return h + "</form>";
   }
 
   function inboxHtml() {
@@ -405,19 +408,19 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     var h = '<li class="' + cls + '" data-id="' + t.id + '">';
     h += '<div class="task-main"><button class="check" data-check="' + t.id + '" aria-label="' + (done ? "Mark not done: " : "Mark done: ") + esc(t.text) + '">' + CHECK + "</button>";
     h += '<button class="task-text" data-open="' + t.id + '" aria-expanded="' + (openId === t.id) + '">' + esc(t.text) +
-         (t.tag && !shopItem ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") +
-         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
-         '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button></div>";
+         (filter === "personal" && t.tag && t.tag !== "Personal" ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") +
+         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button></div>";
     h += '<div class="actions">';
+    if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
+    h += '<button class="chip" data-edit="' + t.id + '">Edit</button><button class="chip danger" data-del="' + t.id + '">Delete</button>';
     if (!done && !shopItem) {
-      SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
-      h += '<span class="seg-label" style="width:100%;margin-top:2px">tag</span>';
-      TAGS.forEach(function (tg) { h += '<button class="chip" style="--c:' + tagColor(tg) + '" data-settag="' + t.id + '" data-tag="' + tg + '" aria-pressed="' + (t.tag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
       h += '<span style="width:100%"></span>';
-      h += '<button class="chip" style="--c:var(--shop)" data-toshop="' + t.id + '"><span class="d"></span>To shopping</button>';
+      if (filter === "personal") PTAGS.forEach(function (tg) { h += '<button class="chip" style="--c:' + tagColor(tg) + '" data-settag="' + t.id + '" data-tag="' + tg + '" aria-pressed="' + ((t.tag || "Personal") === tg) + '"><span class="d"></span>' + tg + "</button>"; });
+      h += '<button class="chip" data-settag="' + t.id + '" data-tag="' + (isWork(t) ? "Personal" : "Work") + '">→ ' + (isWork(t) ? "Personal" : "Work") + "</button>";
+      h += '<button class="chip" data-toshop="' + t.id + '">→ Shop</button>';
     }
-    if (t.sec === "shop") h += '<button class="chip" style="--c:var(--now)" data-totask="' + t.id + '"><span class="d"></span>Make it a task</button>';
-    h += '<button class="chip" data-edit="' + t.id + '">Edit</button><button class="chip danger" data-del="' + t.id + '">Delete</button></div>';
+    if (t.sec === "shop") h += '<button class="chip" data-totask="' + t.id + '">→ Make it a task</button>';
+    h += "</div>";
     h += '<form class="edit" data-editform="' + t.id + '"><input id="edit-' + t.id + '" aria-label="Edit task" value="' + esc(t.text) + '" enterkeyhint="done"><button class="btn btn-primary" type="submit">Save</button></form>';
     return h + "</li>";
   }
@@ -426,7 +429,8 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     sync = { cls: cls, text: text };
     var el = document.getElementById("sync"), tx = document.getElementById("syncText");
     if (el) el.className = "sync " + cls;
-    if (tx) tx.textContent = text;
+    if (tx) tx.textContent = cls === "warn" ? text : "";
+    if (el) el.title = text;
   }
 
   function showToast(msg, snap) {
@@ -642,9 +646,12 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   });
 
   root.addEventListener("click", function (ev) {
+    if (suppressClick) { suppressClick = false; return; }
     var b = ev.target.closest("button"); if (!b) return;
     var d = b.dataset;
     if (d.scan) { scan(); return; }
+    if (d.addopen) { addOpen = true; focusAdd = true; render(); return; }
+    if (d.addclose) { addOpen = false; addTag = null; render(); return; }
     if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
     if (d.rdot) { var rd = findR(d.rdot); if (rd) { var kd = keyFor(dayOffset), cd = rcount(rd, kd), ii = +d.i; rset(rd, kd, cd > ii ? ii : ii + 1); changed(); } return; }
     if (d.day) { dayOffset = Math.min(0, Math.max(-60, dayOffset + (+d.day))); openR = null; editR = null; render(); return; }
@@ -652,12 +659,17 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     if (d.rtimes) { var rn = findR(d.rtimes); if (rn) { rn.times = +d.n; changed(); } return; }
     if (d.redit) { editR = d.redit; render(); return; }
     if (d.rdel) { var snapR = snapshot(), rx = findR(d.rdel); state.routines = state.routines.filter(function (x) { return x.id !== d.rdel; }); openR = null; showToast("Deleted routine: " + (rx ? rx.name : ""), snapR); changed(); return; }
-    if (d.filter) { filter = d.filter; lsSet("tasks-filter", filter); openId = null; render(); return; }
+    if (d.filter) { filter = d.filter; lsSet("tasks-filter", filter); openId = null; addOpen = false; addTag = null; render(); return; }
     if (d.addsec) { addSec = d.addsec; render(); return; }
     if (d.toggle) { collapsed[d.toggle] = !collapsed[d.toggle]; saveCollapsed(); render(); return; }
     if (d.open) { openId = openId === d.open ? null : d.open; editId = null; render(); return; }
     if (d.edit) { editId = d.edit; render(); return; }
-    if (d.settag) { var w = find(d.settag); if (w) { if (w.tag === d.tag) delete w.tag; else w.tag = d.tag; changed(); } return; }
+    if (d.settag) {
+      var w = find(d.settag); if (!w) return;
+      var snW = snapshot(), wasWork = isWork(w); w.tag = d.tag;
+      if (wasWork !== isWork(w)) { openId = null; showToast("Moved to " + (isWork(w) ? "Work" : "Personal") + ": " + w.text, snW); }
+      changed(); return;
+    }
     if (d.addtag) { addTag = addTag === d.addtag ? null : d.addtag; render(); return; }
     if (d.take) {
       var snapT = snapshot(), s = null;
@@ -720,30 +732,39 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     var input = document.getElementById("addInput");
     var text = (input.value || "").trim(); if (!text) return;
     var task = { id: "t" + (state.nextId++), text: text, sec: filter === "shop" ? "shop" : addSec };
-    if (filter !== "shop") { var tg0 = addTag || (filter === "work" ? "Work" : filter === "personal" ? "Personal" : null); if (tg0) task.tag = tg0; }
-    state.tasks.unshift(task); addTag = null;
+    if (filter !== "shop") task.tag = filter === "work" ? "Work" : (addTag || "Personal");
+    state.tasks.unshift(task);
     if (collapsed[task.sec]) { collapsed[task.sec] = false; saveCollapsed(); }
-    changed();
-    var again = document.getElementById("addInput"); if (again) again.focus();
+    focusAdd = true; changed();
   });
 
   /* Drag to reorder: grab the dotted handle, drop anywhere in Now / Next / Later / Done (or on a collapsed section's header). */
-  var drag = null;
+  /* Hold a task for a moment, then drag it. A quick tap still opens it; a swipe still scrolls. */
+  var drag = null, press = null;
   root.addEventListener("pointerdown", function (ev) {
-    var g = ev.target.closest(".grip"); if (!g || drag) return;
-    ev.preventDefault();
-    var li = g.closest(".task"), r = li.getBoundingClientRect();
+    suppressClick = false;
+    if (drag || ev.button > 0) return;
+    var main = ev.target.closest(".task-main"); if (!main || ev.target.closest(".check")) return;
+    var li = main.closest(".task"); if (li.classList.contains("editing")) return;
+    press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(function () { var p0 = press; press = null; if (p0) startDrag(li, main, p0.x, p0.y, ev.pointerId); }, 380) };
+  });
+  function cancelPress() { if (press) { clearTimeout(press.timer); press = null; } }
+  document.addEventListener("touchmove", function (ev) { if (drag) ev.preventDefault(); }, { passive: false });
+  function startDrag(li, g, cx, cy, pid) {
+    suppressClick = true;
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+    var r = li.getBoundingClientRect();
     var ghost = li.cloneNode(true);
     ghost.className = "task ghost" + (li.classList.contains("done") ? " done" : "");
     ghost.style.cssText = "width:" + r.width + "px;left:" + r.left + "px;top:" + r.top + "px;--c:" + getComputedStyle(li.closest("section")).getPropertyValue("--c");
     document.body.appendChild(ghost);
     var ph = document.createElement("li"); ph.className = "placeholder"; ph.style.height = (li.querySelector(".task-main").offsetHeight - 8) + "px";
     li.parentNode.insertBefore(ph, li); li.style.display = "none";
-    drag = { id: li.dataset.id, li: li, ghost: ghost, ph: ph, dy: ev.clientY - r.top, x: ev.clientX, y: ev.clientY, y0: ev.clientY, moved: false, head: null };
+    drag = { id: li.dataset.id, li: li, ghost: ghost, ph: ph, dy: cy - r.top, x: cx, y: cy, y0: cy, moved: false, head: null };
     document.body.classList.add("dragging");
-    try { g.setPointerCapture(ev.pointerId); } catch (e) {}
+    try { g.setPointerCapture(pid); } catch (e) {}
     requestAnimationFrame(autoScroll);
-  });
+  }
   function setHead(h) {
     if (drag.head && drag.head !== h) drag.head.classList.remove("drop");
     drag.head = h; if (h) h.classList.add("drop");
@@ -774,6 +795,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     requestAnimationFrame(autoScroll);
   }
   document.addEventListener("pointermove", function (ev) {
+    if (press && !drag) { if (Math.abs(ev.clientX - press.x) > 8 || Math.abs(ev.clientY - press.y) > 8) cancelPress(); return; }
     if (!drag) return; ev.preventDefault();
     drag.x = ev.clientX; drag.y = ev.clientY; if (Math.abs(drag.y - drag.y0) > 8) drag.moved = true; dragTo(ev.clientX, ev.clientY);
   }, { passive: false });
@@ -805,8 +827,8 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     if (sec !== prev) showToast("Moved to " + (sec === "shop" ? "To buy" : sec.charAt(0).toUpperCase() + sec.slice(1)) + ": " + t.text, before);
     changed();
   }
-  document.addEventListener("pointerup", function () { if (drag) endDrag(false); });
-  document.addEventListener("pointercancel", function () { if (drag) endDrag(true); });
+  document.addEventListener("pointerup", function () { cancelPress(); if (drag) endDrag(false); });
+  document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
 
 
   render();
