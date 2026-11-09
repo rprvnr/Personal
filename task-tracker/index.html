@@ -133,6 +133,47 @@ section.collapsed .list { display: none; }
 .inbox-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding: 0 4px; }
 .linkbtn { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 4px; }
 
+/* Routines */
+.today { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
+.today::-webkit-scrollbar { display: none; }
+.today-label { flex: none; align-self: center; font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-right: 2px; }
+.rchip { flex: none; display: inline-flex; align-items: center; gap: 7px; font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.rchip.full { border-color: color-mix(in srgb, var(--done) 55%, transparent); background: color-mix(in srgb, var(--done) 13%, transparent); }
+.pips { display: inline-flex; gap: 3px; }
+.pip { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--muted); }
+.pip.on { background: var(--done); border-color: var(--done); }
+.daynav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.daynav button { font: inherit; background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; width: 40px; height: 36px; cursor: pointer; font-size: 17px; }
+.daynav button[disabled] { opacity: .3; cursor: default; }
+.daynav .dlabel { font-weight: 700; font-size: 16px; text-align: center; }
+.daynav .dsub { color: var(--muted); font-size: 12px; text-align: center; margin-top: 2px; }
+.routine { border-top: 1px solid var(--line); }
+.routine:first-child { border-top: 0; }
+.r-main { display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 14px; }
+.r-name { flex: 1; min-width: 0; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
+.r-meta { display: flex; gap: 10px; align-items: center; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+.week { display: inline-flex; gap: 3px; }
+.week i { width: 9px; height: 9px; border-radius: 2px; background: var(--surface-2); border: 1px solid var(--line); }
+.week i.half { background: color-mix(in srgb, var(--done) 35%, transparent); border-color: transparent; }
+.week i.full { background: var(--done); border-color: var(--done); }
+.streak { color: var(--accent); font-weight: 700; }
+.r-dots { display: flex; gap: 8px; }
+.rdot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--done) 60%, var(--muted)); background: transparent; cursor: pointer; display: grid; place-items: center; color: transparent; padding: 0; transition: background .15s, transform .15s; }
+.rdot svg { width: 14px; height: 14px; }
+.rdot:active { transform: scale(.88); }
+.rdot.on { background: var(--done); border-color: var(--done); color: #03140a; }
+.routine.open { background: var(--surface-2); }
+.routine .actions { padding: 0 12px 10px 14px; }
+.routine.open .actions { display: flex; }
+.routine .edit { padding: 0 12px 10px 14px; }
+.routine.editing .edit { display: flex; }
+.routine.editing .actions { display: none; }
+.r-add { display: flex; gap: 8px; }
+.r-add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.r-add input:focus { outline: none; border-color: var(--done); }
+.r-add .btn { background: var(--done); color: #03140a; }
+.hint-line { font-size: 12px; color: var(--muted); padding: 0 2px; }
+
 /* Drag */
 .grip { flex: none; width: 32px; height: 30px; margin: -5px -8px -5px 0; display: grid; place-items: center; background: none; border: 0; color: var(--muted); opacity: .55; cursor: grab; touch-action: none; padding: 0; }
 .grip svg { width: 16px; height: 16px; }
@@ -155,7 +196,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 <body>
 <div class="wrap" id="root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
-<script id="state" type="application/json">{"tasks": [{"id": "t103", "text": "Set up Claude for Lux and build a tracker for her", "sec": "now", "tag": "Personal"}, {"id": "t104", "text": "Clean the room", "sec": "now", "tag": "Home"}, {"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "now", "tag": "Work"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "now", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t5", "text": "Office infrastructure message", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "now", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t8", "text": "Book Mumbai flights → then book room for parents", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "Personal"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "next", "tag": "Personal"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat (around Nov 21)", "sec": "next", "tag": "Personal"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t16", "text": "Blood tests", "sec": "next", "tag": "Errands"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "next", "tag": "Errands"}, {"id": "t21", "text": "Clean shoes", "sec": "next", "tag": "Errands"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Personal"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Home"}, {"id": "t30", "text": "Hang poster", "sec": "later", "tag": "Home"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Personal"}, {"id": "t36", "text": "Glean setup", "sec": "later", "tag": "Work"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "later", "tag": "Personal"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "later", "tag": "Personal"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "later", "tag": "Personal"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t44", "text": "Work out or go for a run", "sec": "later", "tag": "Goals"}, {"id": "t45", "text": "Go swimming", "sec": "later", "tag": "Goals"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Goals"}, {"id": "t47", "text": "Drink matcha", "sec": "later", "tag": "Personal"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Personal"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "shop"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t19", "text": "Head light", "sec": "shop"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "shop"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}], "nextId": 105, "inbox": {"lastScan": "2026-11-08T07:41:15.743Z", "items": []}}</script>
+<script id="state" type="application/json">{"tasks": [{"id": "t114", "text": "Finance tracker", "sec": "now", "tag": "Personal"}, {"id": "t113", "text": "Book room for parents", "sec": "later", "tag": "Personal"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t112", "text": "Shelf or organiser", "sec": "shop"}, {"id": "t111", "text": "Nail paint", "sec": "shop"}, {"id": "t106", "text": "Guide Pallika on updating raw data workbook with Claude", "sec": "next", "tag": "Work"}, {"id": "t105", "text": "Review survey slides in detail and leave comments", "sec": "now", "tag": "Work"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "now", "tag": "Personal"}, {"id": "t104", "text": "Clean the room", "sec": "now", "tag": "Home"}, {"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "now", "tag": "Work"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "next", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "later", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t36", "text": "Glean setup", "sec": "now", "tag": "Work"}, {"id": "t30", "text": "Hang poster", "sec": "now", "tag": "Home"}, {"id": "t45", "text": "Go swimming", "sec": "now", "tag": "Goals"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "now", "tag": "Personal"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "now", "tag": "Personal"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "now", "tag": "Personal"}, {"id": "t103", "text": "Set up Claude for Lux and build a tracker for her", "sec": "now", "tag": "Personal"}, {"id": "t19", "text": "Get car and install Head light", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t5", "text": "Office infrastructure message", "sec": "next", "tag": "Work"}, {"id": "t47", "text": "Drink matcha", "sec": "next", "tag": "Personal"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "Work"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat (around Nov 21)", "sec": "next", "tag": "Personal"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Personal"}, {"id": "t21", "text": "Clean shoes", "sec": "later", "tag": "Errands"}, {"id": "t16", "text": "Blood tests", "sec": "later", "tag": "Errands"}, {"id": "t8", "text": "Book Mumbai flights", "sec": "later", "tag": "Personal"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Home"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Personal"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Personal"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Goals"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "bought", "from": "shop", "doneAt": "2026-11-09"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "shop"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}], "nextId": 116, "inbox": {"lastScan": "2026-11-08T07:56:41.202Z", "items": [], "lastScanFlow": "2026-11-08T07:56:41.202Z"}, "routines": [{"id": "r1", "name": "Shower", "times": 2}, {"id": "r2", "name": "Work out", "times": 1}, {"id": "r3", "name": "Take meds", "times": 1}], "log": {}}</script>
 <script id="app">
 (function () {
   var SECS = [
@@ -180,6 +221,9 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   var state = JSON.parse(document.getElementById("state").textContent);
   if (!state.inbox) state.inbox = { lastScan: null, items: [] };
+  if (!state.routines) state.routines = [];
+  if (!state.log) state.log = {};
+  var dayOffset = 0, openR = null, editR = null;
   var root = document.getElementById("root");
   var addSec = "now", addTag = null, openId = null, editId = null;
   var artifact = null, canSave = null, saveTimer = null;
@@ -209,8 +253,66 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function find(id) { for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i]; return null; }
   function snapshot() { return JSON.stringify(state); }
   function isWork(t) { return t.tag === "Work"; }
-  function visible(t) { if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
+  function visible(t) { if (filter === "daily") return false; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
   function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
+
+  /* ---------- Daily routines ---------- */
+  function keyFor(off) { var d = new Date(); d.setDate(d.getDate() + off); return ymd(d); }
+  function rcount(r, key) { return ((state.log[key] || {})[r.id]) || 0; }
+  function rset(r, key, n) {
+    n = Math.max(0, Math.min(r.times, n));
+    var day = state.log[key] || (state.log[key] = {});
+    if (n) day[r.id] = n; else delete day[r.id];
+    if (!Object.keys(day).length) delete state.log[key];
+    var cutoff = keyFor(-120);
+    Object.keys(state.log).forEach(function (k) { if (k < cutoff) delete state.log[k]; });
+  }
+  function findR(id) { for (var i = 0; i < state.routines.length; i++) if (state.routines[i].id === id) return state.routines[i]; return null; }
+  function streak(r) {
+    var off = rcount(r, keyFor(0)) >= r.times ? 0 : -1, n = 0;
+    while (n < 400 && rcount(r, keyFor(off)) >= r.times) { n++; off--; }
+    return n;
+  }
+  function todayDone() { var k = keyFor(0), d = 0; state.routines.forEach(function (r) { if (rcount(r, k) >= r.times) d++; }); return d; }
+  function pipsHtml(r, c) { var h = '<span class="pips" aria-hidden="true">'; for (var i = 0; i < r.times; i++) h += '<span class="pip' + (i < c ? " on" : "") + '"></span>'; return h + "</span>"; }
+
+  function todayStripHtml() {
+    if (!state.routines.length) return "";
+    var k = keyFor(0), h = '<div class="today" role="group" aria-label="Today\'s routines"><span class="today-label">Today</span>';
+    state.routines.forEach(function (r) {
+      var c = rcount(r, k);
+      h += '<button type="button" class="rchip' + (c >= r.times ? " full" : "") + '" data-rtap="' + r.id + '" aria-label="' + esc(r.name) + ": " + c + " of " + r.times + '">' + esc(r.name) + pipsHtml(r, c) + "</button>";
+    });
+    return h + "</div>";
+  }
+
+  function dailyHtml() {
+    var k = keyFor(dayOffset), d = new Date(); d.setDate(d.getDate() + dayOffset);
+    var label = dayOffset === 0 ? "Today" : dayOffset === -1 ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "long" });
+    var h = '<div class="daynav"><button type="button" data-day="-1" aria-label="Previous day">‹</button><div><div class="dlabel">' + label + '</div><div class="dsub">' +
+            esc(d.toLocaleDateString(undefined, { month: "short", day: "numeric" })) + "</div></div>" +
+            '<button type="button" data-day="1" aria-label="Next day"' + (dayOffset >= 0 ? " disabled" : "") + ">›</button></div>";
+    h += '<section style="--c:var(--done)"><ul class="list">';
+    if (!state.routines.length) h += '<li class="empty">No routines yet. Add one below.</li>';
+    state.routines.forEach(function (r) {
+      var c = rcount(r, k), sk = streak(r);
+      h += '<li class="routine' + (openR === r.id ? " open" : "") + (editR === r.id ? " editing" : "") + '"><div class="r-main">';
+      h += '<button class="r-name" data-ropen="' + r.id + '">' + esc(r.name) + (r.times > 1 ? ' <span style="color:var(--muted);font-weight:400">×' + r.times + "</span>" : "") + '<span class="r-meta"><span class="week" aria-label="Last 7 days">';
+      for (var i = -6; i <= 0; i++) { var ci = rcount(r, keyFor(i)); h += '<i class="' + (ci >= r.times ? "full" : ci ? "half" : "") + '"></i>'; }
+      h += "</span>" + (sk ? '<span class="streak">' + sk + "-day streak</span>" : "<span>no streak yet</span>") + "</span></button>";
+      h += '<div class="r-dots">';
+      for (var j = 0; j < r.times; j++) h += '<button class="rdot' + (j < c ? " on" : "") + '" data-rdot="' + r.id + '" data-i="' + j + '" aria-label="' + esc(r.name) + " " + (j + 1) + '">' + CHECK + "</button>";
+      h += "</div></div>";
+      h += '<div class="actions"><span class="seg-label">times a day</span>';
+      [1, 2, 3].forEach(function (n) { h += '<button class="chip" style="--c:var(--done)" data-rtimes="' + r.id + '" data-n="' + n + '" aria-pressed="' + (r.times === n) + '">' + n + "</button>"; });
+      h += '<button class="chip" data-redit="' + r.id + '">Rename</button><button class="chip danger" data-rdel="' + r.id + '">Delete</button></div>';
+      h += '<form class="edit" data-rform="' + r.id + '"><input id="redit-' + r.id + '" aria-label="Rename routine" value="' + esc(r.name) + '" enterkeyhint="done"><button class="btn btn-primary" type="submit">Save</button></form></li>';
+    });
+    h += "</ul></section>";
+    h += '<form class="r-add" id="rAdd" autocomplete="off"><input id="rAddInput" type="text" placeholder="Add a routine (e.g. Drink water)" aria-label="New routine" enterkeyhint="done"><button class="btn" type="submit">Add</button></form>';
+    h += '<div class="hint-line">Tap a circle when you\'ve done it. Tap a routine\'s name to change how many times a day. Use ‹ to fill in a day you missed logging.</div>';
+    return h;
+  }
 
   function render() {
     var open = { all: 0, work: 0, personal: 0, shop: 0 };
@@ -228,10 +330,18 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
          '<div class="top-right"><span class="sync ' + sync.cls + '" id="sync"><span class="led"></span><span id="syncText">' + esc(sync.text) + "</span></span>" +
          '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button></div></div>";
     h += '<div class="filter" role="group" aria-label="Show">';
-    [["all", "All"], ["personal", "Personal"], ["work", "Work"], ["shop", "Shopping"]].forEach(function (f) {
+    open.daily = todayDone() + "/" + state.routines.length;
+    [["all", "All"], ["personal", "Personal"], ["work", "Work"], ["shop", "Shop"], ["daily", "Daily"]].forEach(function (f) {
       h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "<small>" + open[f[0]] + "</small></button>";
     });
     h += "</div></header>";
+
+    if (filter === "daily") {
+      root.innerHTML = h + dailyHtml();
+      if (editR) { var re = document.getElementById("redit-" + editR); if (re) re.focus(); }
+      return;
+    }
+    if (filter !== "shop") h += todayStripHtml();
 
     h += '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
          '<input id="addInput" type="text" placeholder="' + (filter === "work" ? "Add a work task…" : filter === "shop" ? "Add something to buy…" : "Add a task…") + '" aria-label="New task" enterkeyhint="done">' +
@@ -535,6 +645,13 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     var b = ev.target.closest("button"); if (!b) return;
     var d = b.dataset;
     if (d.scan) { scan(); return; }
+    if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
+    if (d.rdot) { var rd = findR(d.rdot); if (rd) { var kd = keyFor(dayOffset), cd = rcount(rd, kd), ii = +d.i; rset(rd, kd, cd > ii ? ii : ii + 1); changed(); } return; }
+    if (d.day) { dayOffset = Math.min(0, Math.max(-60, dayOffset + (+d.day))); openR = null; editR = null; render(); return; }
+    if (d.ropen) { openR = openR === d.ropen ? null : d.ropen; editR = null; render(); return; }
+    if (d.rtimes) { var rn = findR(d.rtimes); if (rn) { rn.times = +d.n; changed(); } return; }
+    if (d.redit) { editR = d.redit; render(); return; }
+    if (d.rdel) { var snapR = snapshot(), rx = findR(d.rdel); state.routines = state.routines.filter(function (x) { return x.id !== d.rdel; }); openR = null; showToast("Deleted routine: " + (rx ? rx.name : ""), snapR); changed(); return; }
     if (d.filter) { filter = d.filter; lsSet("tasks-filter", filter); openId = null; render(); return; }
     if (d.addsec) { addSec = d.addsec; render(); return; }
     if (d.toggle) { collapsed[d.toggle] = !collapsed[d.toggle]; saveCollapsed(); render(); return; }
@@ -586,6 +703,15 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   root.addEventListener("submit", function (ev) {
     ev.preventDefault();
     var f = ev.target;
+    if (f.id === "rAdd") {
+      var rv = (document.getElementById("rAddInput").value || "").trim(); if (!rv) return;
+      state.routines.push({ id: "r" + (state.nextId++), name: rv, times: 1 }); changed();
+      var ra = document.getElementById("rAddInput"); if (ra) ra.focus(); return;
+    }
+    if (f.dataset && f.dataset.rform) {
+      var rr = findR(f.dataset.rform), nv = (f.querySelector("input").value || "").trim();
+      if (rr && nv) rr.name = nv; editR = null; openR = null; changed(); return;
+    }
     if (f.dataset && f.dataset.editform) {
       var t = find(f.dataset.editform), v = (f.querySelector("input").value || "").trim();
       if (t && v) t.text = v;
