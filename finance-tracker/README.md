@@ -46,3 +46,10 @@ republishes the page and posts a summary. Alert rows drop out once a statement c
 
 Personal rules (names of people, employer, landlord, own account handles) live in the data
 folder's `personal_rules.csv`, not in this repo.
+
+The data folder is kept between sessions only as `vault/data.tar.gz.enc` (AES-256, openssl
+PBKDF2). Its key is stored in the dashboard's owner-only storage (`vault/key`), never in git.
+
+`parse.py` also writes `<out>.positions.json`: bank balances and card dues as of the latest
+data (last statement figure plus every later row), which the dashboard shows as "Where you
+stand right now".

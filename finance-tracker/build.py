@@ -7,6 +7,7 @@ dashboard saves, so the workbook matches the edits made on the page.
 """
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -34,11 +35,6 @@ def gaps(tx):
         amounts = ", ".join(f"₹{t['amount']:,.0f} ({t['date'][8:]}/{t['date'][5:7]})" for t in unsure)
         out.append({"title": f"{len(unsure)} Swiggy charges look like Dineout but have no receipt.",
                     "detail": f"{amounts}. They're counted under Dining out for now."})
-    cash = os.environ.get("CASH_ON_HAND")
-    if cash:
-        out.append({"title": f"Cash on hand: ₹{float(cash):,.0f}.",
-                    "detail": "ATM withdrawals go into your wallet and aren't counted as spending. "
-                              "Cash you spend is recorded as its own row."})
     return out
 
 
@@ -51,8 +47,13 @@ def apply_edits(tx, edits):
         t["counted"] = inc if inc is not None else CATEGORIES[t["category"]] != "excluded"
 
 
-def build_html(tx, out_dir):
-    payload = {"transactions": tx, "categories": CATEGORIES, "gaps": gaps(tx),
+def load_positions(tx_path):
+    p = re.sub(r"\.json$", "", tx_path) + ".positions.json"
+    return json.load(open(p)) if os.path.exists(p) else {"banks": [], "cards": [], "other": []}
+
+
+def build_html(tx, out_dir, positions):
+    payload = {"transactions": tx, "categories": CATEGORIES, "gaps": gaps(tx), "positions": positions,
                "built": datetime.now().strftime("%d %b %Y")}
     with open(os.path.join(HERE, "template.html")) as f:
         html = f.read()
@@ -79,7 +80,7 @@ def header(ws, cols, widths):
     ws.freeze_panes = "A2"
 
 
-def build_xlsx(tx, out_dir):
+def build_xlsx(tx, out_dir, positions):
     wb = Workbook()
     months = sorted({t["month"] for t in tx})
     mlabel = {m: datetime.strptime(m, "%Y-%m").strftime("%b %Y") for m in months}
@@ -140,7 +141,7 @@ def build_xlsx(tx, out_dir):
     ws.append(["Monthly average", "", f"=C{t}/{len(months)}", f"=D{t}/{len(months)}", f"=E{t}/{len(months)}",
                f"=F{t}/{len(months)}", f"=G{t}/{len(months)}", ""])
     # last three complete months (the latest month is usually partial)
-    l3 = months[-4:-1] if len(months) >= 4 else months
+    l3 = months[-3:]
     a, b = months.index(l3[0]) + 2, months.index(l3[-1]) + 2
     lbl = f"{mlabel[l3[0]][:3]}–{mlabel[l3[-1]][:3]}"
     ws.append([f"Last 3 months ({lbl})", "", *[f"=SUM({c}{a}:{c}{b})" for c in "CDEFG"], f'=IF(C{t + 2}=0,"",G{t + 2}/C{t + 2})'])
@@ -158,7 +159,7 @@ def build_xlsx(tx, out_dir):
 
     # --- Spending by category x month ---
     wk = wb.create_sheet("Spending by category", 1)
-    l3 = months[-4:-1] if len(months) >= 4 else months
+    l3 = months[-3:]
     l3a, l3b = get_column_letter(months.index(l3[0]) + 2), get_column_letter(months.index(l3[-1]) + 2)
     header(wk, ["Category"] + [mlabel[m] for m in months] + ["Total", "Share", "Last 3 months, per month"],
            [30] + [11] * len(months) + [13, 8, 14])
@@ -207,6 +208,34 @@ def build_xlsx(tx, out_dir):
     wsub.cell(row=len(pairs) + 3, column=1, value="Only categories with a breakdown are listed here; "
               "the full list is on 'Spending by category'.").font = Font(italic=True, color="6B7280")
 
+    # --- Right now: balances and card dues ---
+    wr = wb.create_sheet("Right now", 0)
+    header(wr, ["Item", "Amount", "As of", "Detail"], [34, 15, 12, 70])
+    for b_ in positions["banks"]:
+        wr.append([b_["account"], b_["balance"], b_["as_of"], "Bank balance"])
+    for o in positions.get("other", []):
+        if o["type"] == "cash":
+            wr.append([o["label"], o["amount"], "", "Cash you're holding"])
+    first_asset, last_asset = 2, wr.max_row
+    for c in positions["cards"]:
+        wr.append([c["account"], -c["outstanding_now"], c["as_of"],
+                   f"Statement {c['statement_date']}: ₹{c['statement_due']:,.2f} due {c['due_date']}; "
+                   f"₹{c['paid_since_statement']:,.2f} paid/refunded since; ₹{c['statement_left_to_pay']:,.2f} "
+                   f"left on it; ₹{c['new_spends_since_statement']:,.2f} new spends"
+                   + (f"; limit ₹{c['limit']:,.0f}" if c.get("limit") else "")])
+    last_row = wr.max_row
+    wr.append(["Net position now", f"=SUM(B2:B{last_row})", "", "Accounts + cash − card dues"])
+    net_row = wr.max_row
+    for o in positions.get("other", []):
+        if o["type"] == "owed_to_you":
+            wr.append([o["label"], o["amount"], "", "Owed to you"])
+    wr.append(["Net incl. money owed to you", f"=SUM(B2:B{last_row})+SUM(B{net_row + 1}:B{wr.max_row})", "", ""])
+    for row in wr.iter_rows(min_row=2, max_row=wr.max_row):
+        row[1].number_format = INR
+    for r_ in (net_row, wr.max_row):
+        for c_ in wr[r_]:
+            c_.font = Font(bold=True)
+
     # --- Notes ---
     wn = wb.create_sheet("Notes")
     wn.column_dimensions["A"].width = 120
@@ -234,9 +263,10 @@ def main(tx_path, out_dir, edits_path=None):
     tx = json.load(open(tx_path))
     edits = json.load(open(edits_path)) if edits_path else {}
     os.makedirs(out_dir, exist_ok=True)
-    print(build_html(tx, out_dir))
+    positions = load_positions(tx_path)
+    print(build_html(tx, out_dir, positions))
     apply_edits(tx, edits)
-    print(build_xlsx(tx, out_dir))
+    print(build_xlsx(tx, out_dir, positions))
 
 
 if __name__ == "__main__":

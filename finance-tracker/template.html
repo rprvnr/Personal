@@ -45,6 +45,17 @@ button, select, input { font: inherit; color: var(--ink); }
 .tile span { display: block; color: var(--muted); font-size: 12px; }
 .tile b { display: block; font-size: 26px; letter-spacing: -0.02em; margin-top: 6px; }
 .tile small { color: var(--muted); font-size: 12px; }
+.now { display: grid; gap: 14px; }
+.now-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.now-head h2 { margin: 0; }
+.now-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.now-tiles .tile { background: var(--surface-2); }
+.acct { width: 100%; border-collapse: collapse; font-size: 13px; }
+.acct td, .acct th { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.acct td:first-child, .acct th:first-child { text-align: left; }
+.flag { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--spend) 45%, var(--line)); background: color-mix(in srgb, var(--spend) 8%, transparent); font-size: 13px; }
+.flag.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); background: color-mix(in srgb, var(--warn) 7%, transparent); }
+.flag b { white-space: nowrap; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .gaps { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
 .gaps ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
@@ -98,6 +109,7 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
 .muted { color: var(--muted); }
 .more { margin-top: 10px; }
 @media (max-width: 860px) {
+  .now-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid2 { grid-template-columns: 1fr; }
   .bar { grid-template-columns: 120px 1fr 80px; }
@@ -110,7 +122,7 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
   <header>
     <div>
       <h1>Money Tracker</h1>
-      <div class="sub" id="sub"></div>
+      <div class="sub" id="sub" style="max-width:none"></div>
     </div>
     <div class="row">
       <span class="status" id="status">Loading your edits…</span>
@@ -119,6 +131,15 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
     </div>
   </header>
 
+  <section class="card now" id="now">
+    <div class="now-head"><h2>Where you stand right now</h2><span class="muted" style="font-size:12px" id="now-asof"></span></div>
+    <div class="now-tiles" id="now-tiles"></div>
+    <div id="now-flags" style="display:grid;gap:8px"></div>
+    <div class="tablewrap"><table class="acct" id="now-cards"></table></div>
+    <div class="tablewrap"><table class="acct" id="now-banks"></table></div>
+  </section>
+
+  <h2 style="margin:6px 0 -8px">Spending and income</h2>
   <div class="row" id="months" role="group" aria-label="Period"></div>
 
   <section class="tiles" id="tiles"></section>
@@ -182,7 +203,7 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const DATA = JSON.parse(document.getElementById("data").textContent);
-const TX = DATA.transactions, CATS = DATA.categories, GAPS = DATA.gaps;
+const TX = DATA.transactions, CATS = DATA.categories, GAPS = DATA.gaps, POS = DATA.positions || { banks: [], cards: [], other: [] };
 const CAT_NAMES = Object.keys(CATS);
 let state = { overrides: {}, rules: {} };   // overrides[id] = {cat?, inc?}; rules[merchant] = {cat?, inc?}
 let period = "all", catFilter = "", shown = 150;
@@ -211,13 +232,15 @@ function eff(t) {
 
 const MONTHS = [...new Set(TX.map(t => t.month))].sort();
 // "Last 3 months" = the three complete months before the current (partial) month.
-const LAST3 = MONTHS.slice(-4, -1);
-function periodMonths() { return period === "all" ? MONTHS : period === "last3" ? LAST3 : [period]; }
+function periodMonths() { return period === "all" ? MONTHS : [period]; }
+function shortDate(d) { return d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""; }
 function inPeriod(t) { return period === "all" || periodMonths().includes(t.month); }
 
 function renderMonths() {
   const el = document.getElementById("months");
-  el.innerHTML = [["all", "All months"], ["last3", `Last 3 months (${monthName(LAST3[0])} – ${monthName(LAST3[2])})`], ...MONTHS.map(m => [m, monthName(m)])]
+  const first = TX.length ? TX[0].date : "", last = TX.length ? TX[TX.length - 1].date : "";
+  const label = m => m === MONTHS[MONTHS.length - 1] ? `${monthName(m)} (so far)` : monthName(m);
+  el.innerHTML = [["all", `Last 3 months (${shortDate(first)} – ${shortDate(last)})`], ...MONTHS.map(m => [m, label(m)])]
     .map(([k, l]) => `<button class="chip" aria-pressed="${period === k}" data-k="${k}">${l}</button>`).join("");
   el.querySelectorAll("button").forEach(b => b.onclick = () => { period = b.dataset.k; shown = 150; render(); });
 }
@@ -387,6 +410,38 @@ document.getElementById("tbody").addEventListener("change", ev => {
 });
 document.getElementById("more").onclick = () => { shown += 300; renderTable(); };
 
+function renderNow() {
+  const cash = (POS.other || []).filter(o => o.type === "cash").reduce((a, o) => a + o.amount, 0);
+  const owed = (POS.other || []).filter(o => o.type === "owed_to_you");
+  const owedSum = owed.reduce((a, o) => a + o.amount, 0);
+  const bank = POS.banks.reduce((a, b) => a + b.balance, 0);
+  const cards = POS.cards.reduce((a, c) => a + c.outstanding_now, 0);
+  const net = bank + cash - cards;
+  const latest = [...POS.banks, ...POS.cards].map(x => x.as_of).sort().pop() || "";
+  document.getElementById("now-asof").textContent = latest ? `Based on statements, alerts and receipts up to ${shortDate(latest)}` : "";
+  document.getElementById("now-tiles").innerHTML = `
+    <div class="tile"><span>In your accounts + cash</span><b style="color:var(--income)">${fmt(bank + cash)}</b><small>${fmt(bank)} in banks · ${fmt(cash)} cash</small></div>
+    <div class="tile"><span>Owed on credit cards</span><b style="color:var(--spend)">${fmt(cards)}</b><small>${POS.cards.map(c => esc(c.account.split(" ")[0]) + " " + fmtK(c.outstanding_now)).join(" · ")}</small></div>
+    <div class="tile"><span>Net position now</span><b>${fmt(net)}</b><small>accounts + cash − card dues</small></div>
+    <div class="tile"><span>Owed to you</span><b>${fmt(owedSum)}</b><small>${owed.map(o => esc(o.label)).join(" · ") || "nothing pending"}${owedSum ? " · net incl. this " + fmt(net + owedSum) : ""}</small></div>`;
+  const today = new Date().toISOString().slice(0, 10);
+  const flags = [];
+  for (const c of POS.cards) {
+    if (c.statement_left_to_pay > 0.5) {
+      const late = c.due_date && c.due_date < today;
+      flags.push(`<div class="flag"><b>${esc(c.account)}</b><span>${fmt(c.statement_left_to_pay)} of the ${shortDate(c.statement_date)} statement (${fmt(c.statement_due)}) is still unpaid${late ? `, and its due date (${shortDate(c.due_date)}) has passed. Paying less than the full amount usually means interest on the whole balance, so clear it now.` : `. Due ${shortDate(c.due_date)}.`}</span></div>`);
+    }
+    if (c.limit && c.outstanding_now / c.limit > 0.8)
+      flags.push(`<div class="flag warn"><b>${esc(c.account)}</b><span>${fmt(c.outstanding_now)} used of a ${fmt(c.limit)} limit (${Math.round(c.outstanding_now / c.limit * 100)}%). Only ${fmt(c.limit - c.outstanding_now)} left.</span></div>`);
+  }
+  document.getElementById("now-flags").innerHTML = flags.join("");
+  document.getElementById("now-cards").innerHTML = `<thead><tr><th>Card</th><th>Last statement</th><th>Paid / refunded since</th><th>Left on statement</th><th>New spends since</th><th>Owed now</th><th>Limit used</th></tr></thead><tbody>` +
+    POS.cards.map(c => `<tr><td>${esc(c.account)}</td><td>${fmt(c.statement_due)} <span class="muted">(${shortDate(c.statement_date)}, due ${shortDate(c.due_date)})</span></td><td>${fmt(c.paid_since_statement)}</td><td style="color:${c.statement_left_to_pay > 0.5 ? "var(--spend)" : "var(--income)"}">${c.statement_left_to_pay > 0.5 ? fmt(c.statement_left_to_pay) : "Paid"}</td><td>${fmt(c.new_spends_since_statement)}</td><td><b>${fmt(c.outstanding_now)}</b></td><td>${c.limit ? Math.round(c.outstanding_now / c.limit * 100) + "% of " + fmtK(c.limit) : "–"}</td></tr>`).join("") + "</tbody>";
+  document.getElementById("now-banks").innerHTML = `<thead><tr><th>Account</th><th>Balance</th><th>As of</th></tr></thead><tbody>` +
+    POS.banks.map(b => `<tr><td>${esc(b.account)}</td><td>${fmt(b.balance)}</td><td class="muted">${shortDate(b.as_of)}</td></tr>`).join("") +
+    (POS.other || []).filter(o => o.type === "cash").map(o => `<tr><td>${esc(o.label)}</td><td>${fmt(o.amount)}</td><td class="muted">you told me</td></tr>`).join("") + "</tbody>";
+}
+
 function render() { renderMonths(); renderTiles(); renderChart(); renderBreakdowns(); renderRules(); renderTable(); }
 
 function setStatus(s) { document.getElementById("status").textContent = s; }
@@ -462,10 +517,11 @@ async function setupRefresh() {
 }
 
 // ---------- boot ----------
-document.getElementById("sub").textContent = `${TX.length} transactions · ${monthName(MONTHS[0])} to ${monthName(MONTHS[MONTHS.length - 1])} · ${[...new Set(TX.map(t => t.account))].length} accounts and cards · last updated ${DATA.built}`;
+document.getElementById("sub").textContent = `${TX.length} transactions · ${shortDate(TX[0].date)} – ${shortDate(TX[TX.length - 1].date)} · ${[...new Set(TX.map(t => t.account))].filter(a => a !== "Adjustment").length} accounts and cards · last updated ${DATA.built}`;
 try { const s = JSON.parse(localStorage.getItem("money-tracker-state") || "null"); if (s) state = { overrides: s.overrides || {}, rules: s.rules || {} }; } catch (e) {}
 fillSelects();
 renderGaps();
+renderNow();
 render();
 
 (async () => {
