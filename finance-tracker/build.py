@@ -23,16 +23,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def gaps(tx):
-    lak_out = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "out")
-    lak_in = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "in")
+    """Notes shown at the top of the dashboard and on the workbook's Notes sheet."""
     out = []
-    out.append({"title": "HDFC card purchases since 15 Oct come from email alerts.",
-                "detail": "They'll be checked against the statement that arrives around 15 Nov. "
-                          "Anything HDFC didn't send an alert for will only show up then."})
-    if lak_out or lak_in:
-        out.append({"title": "Lakshana B is treated as lending.",
-                    "detail": f"₹{lak_out:,.0f} sent and ₹{lak_in:,.0f} received, none of it counted. "
-                              "If some of it was spending, change those rows' category."})
+    if any(t.get("source") == "HDFC card email alerts" for t in tx):
+        out.append({"title": "HDFC card purchases since 15 Oct come from email alerts.",
+                    "detail": "They'll be checked against the statement that arrives around 15–18 Nov. "
+                              "Anything HDFC didn't send an alert for will only show up then."})
+    unclear = sum(t["amount"] if t["dir"] == "out" else -t["amount"] for t in tx
+                  if t.get("sub", "").startswith("Swiggy (food, Instamart"))
+    if unclear > 0:
+        out.append({"title": f"₹{unclear:,.0f} of Swiggy can't be split into food, Instamart or Dineout.",
+                    "detail": "The card statements only say 'Swiggy'. Your Swiggy order history would settle it."})
+    cash = os.environ.get("CASH_ON_HAND")
+    if cash:
+        out.append({"title": f"Cash on hand: ₹{float(cash):,.0f}.",
+                    "detail": "ATM withdrawals go into your wallet and aren't counted as spending. "
+                              "Cash you spend is recorded as its own row."})
     return out
 
 
@@ -75,7 +81,7 @@ def header(ws, cols, widths):
 
 def build_xlsx(tx, out_dir):
     wb = Workbook()
-    months = sorted({t["date"][:7] for t in tx})
+    months = sorted({t["month"] for t in tx})
     mlabel = {m: datetime.strptime(m, "%Y-%m").strftime("%b %Y") for m in months}
 
     # --- Categories (lookup table) ---
@@ -93,7 +99,7 @@ def build_xlsx(tx, out_dir):
     header(wt, cols, [11, 9, 18, 28, 30, 9, 12, 9, 10, 15, 15, 45, 80, 34])
     for i, t in enumerate(tx, start=2):
         wt.append([
-            datetime.strptime(t["date"], "%Y-%m-%d"), t["date"][:7], t["account"], t["merchant"], t["category"],
+            datetime.strptime(t["date"], "%Y-%m-%d"), t["month"], t["account"], t["merchant"], t["category"],
             "In" if t["dir"] == "in" else "Out", t["amount"], "Yes" if t["counted"] else "No",
             f'=IFERROR(VLOOKUP(E{i},Categories!$A$2:$B${ncat},2,FALSE),"spend")',
             f'=IF(H{i}="Yes",IF(I{i}="spend",IF(F{i}="Out",G{i},-G{i}),IF(I{i}="excluded",IF(F{i}="Out",G{i},0),0)),0)',

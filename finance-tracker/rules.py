@@ -29,7 +29,7 @@ CATEGORIES = {
     "Phone & internet": "spend",
     "Insurance": "spend",
     "Education & classes": "spend",
-    "Cash withdrawals": "spend",
+    "Cash spending": "spend",
     "Small UPI payments": "spend",
     "Splits with friends": "spend",
     "Payments to people": "spend",
@@ -41,6 +41,7 @@ CATEGORIES = {
     "Lending & money returned": "excluded",
     "Bought for family (paid back)": "excluded",
     "Cash moved between accounts": "excluded",
+    "Cash withdrawn to wallet": "excluded",
 }
 
 # (regex on upper-cased narration, merchant label, category, review, note)
@@ -79,7 +80,8 @@ rule(r"UPIRET", "UPI cashback", "Interest & cashback")
 rule(r"CASH TXN CHGS|ISSUANCE FEE|ANNUAL FEE|^IMPS P2P|DCC MARKUP|^GST$", "Bank fees", "Fees & charges")
 
 # ---- cash ----
-rule(r"ATM|^ATW-|^NWD-", "ATM withdrawal", "Cash withdrawals")
+rule(r"ATM|^ATW-|^NWD-", "ATM withdrawal", "Cash withdrawn to wallet", False,
+     "Cash into your wallet. What you spend from it is recorded as Cash spending.")
 
 # ---- food ----
 rule(r"SWIGGY INSTAMART|SWIGGY E COM", "Swiggy Instamart", "Groceries & quick commerce")
@@ -164,7 +166,7 @@ def categorise(desc, amount, direction, account, date):
     for pat, m, cat, review, note in R:
         if pat.search(u):
             # The 50k Axis ATM withdrawal on 11 Oct was re-deposited into HDFC on 13 Oct.
-            if cat == "Cash withdrawals" and account.startswith("Axis Savings") and date == "2026-10-11":
+            if cat == "Cash withdrawn to wallet" and account.startswith("Axis Savings") and date == "2026-10-11":
                 return {"merchant": "ATM withdrawal", "category": "Cash moved between accounts",
                         "review": False, "note": "Withdrawn from Axis and deposited into HDFC on 13 Oct."}
             if cat == "DAD":
@@ -234,6 +236,7 @@ SUB_RULES = [
     ("Subscriptions & apps", r"APPLE", "Apple (iCloud, App Store)"),
     ("Subscriptions & apps", r"YOUTUBE|GOOGLE", "Google & YouTube"),
     ("Entertainment", r"BOOKMYSHOW|KARTHIKEYAN|BHAVANI", "Event tickets (BookMyShow)"),
+    ("Splits with friends", r"CASH", "Paid in cash"),
     ("Entertainment", r"PVR", "Movies"),
 ]
 SUB_RULES = [(c, re.compile(p), sub) for c, p, sub in SUB_RULES]

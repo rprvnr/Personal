@@ -123,7 +123,7 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
   <section class="tiles" id="tiles"></section>
 
   <section class="card gaps" id="gaps">
-    <h2>Gaps in the data</h2>
+    <h2>Notes on the data</h2>
     <ul id="gaplist"></ul>
   </section>
 
@@ -189,7 +189,7 @@ let db = null, docRef = null, saveTimer = null;
 
 const fmt = n => (n < -0.5 ? "−₹" : "₹") + Math.abs(Math.round(n)).toLocaleString("en-IN");
 const fmtK = n => Math.abs(n) >= 100000 ? "₹" + (n / 100000).toFixed(2) + "L" : Math.abs(n) >= 1000 ? "₹" + (n / 1000).toFixed(1) + "k" : fmt(n);
-const monthKey = d => d.slice(0, 7);
+
 const monthName = k => new Date(k + "-01T00:00:00").toLocaleString("en-IN", { month: "short", year: "2-digit" });
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -208,11 +208,11 @@ function eff(t) {
   return { cat, group, inc, spend, income, edited: !!(state.overrides[t.id] || state.rules[t.merchant]) };
 }
 
-const MONTHS = [...new Set(TX.map(t => monthKey(t.date)))].sort();
+const MONTHS = [...new Set(TX.map(t => t.month))].sort();
 // "Last 3 months" = the three complete months before the current (partial) month.
 const LAST3 = MONTHS.slice(-4, -1);
 function periodMonths() { return period === "all" ? MONTHS : period === "last3" ? LAST3 : [period]; }
-function inPeriod(t) { return period === "all" || periodMonths().includes(monthKey(t.date)); }
+function inPeriod(t) { return period === "all" || periodMonths().includes(t.month); }
 
 function renderMonths() {
   const el = document.getElementById("months");
@@ -246,7 +246,7 @@ function renderGaps() {
 }
 
 function renderChart() {
-  const rows = MONTHS.map(m => { const T = totals(t => monthKey(t.date) === m); return { m, ...T }; });
+  const rows = MONTHS.map(m => { const T = totals(t => t.month === m); return { m, ...T }; });
   const W = 1100, H = 220, L = 50, B = 24, top = 10;
   const max = Math.max(1, ...rows.map(r => Math.max(r.inc, r.sp)));
   const step = Math.pow(10, Math.floor(Math.log10(max))) * (max / Math.pow(10, Math.floor(Math.log10(max))) > 5 ? 2 : 1);
@@ -413,19 +413,19 @@ async function flush() {
 function buildWorkbook() {
   const wb = XLSX.utils.book_new();
   const tx = TX.map(t => { const e = eff(t); return {
-    Date: t.date, Month: monthName(monthKey(t.date)), Account: t.account, Merchant: t.merchant, Category: e.cat, Subcategory: e.cat === t.category ? (t.sub || "") : "", Group: e.group,
+    Date: t.date, Month: monthName(t.month), Account: t.account, Merchant: t.merchant, Category: e.cat, Subcategory: e.cat === t.category ? (t.sub || "") : "", Group: e.group,
     Direction: t.dir === "in" ? "In" : "Out", Amount: t.amount, Counted: e.inc ? "Yes" : "No",
     "Counted spending": Math.round(e.spend * 100) / 100, "Counted income": Math.round(e.income * 100) / 100,
     Note: t.note || "", Narration: t.desc }; });
   const ws = XLSX.utils.json_to_sheet(tx);
   ws["!cols"] = [10, 8, 18, 28, 26, 30, 9, 9, 11, 8, 14, 14, 40, 70].map(w => ({ wch: w }));
-  const months = MONTHS.map(m => { const T = totals(t => monthKey(t.date) === m);
+  const months = MONTHS.map(m => { const T = totals(t => t.month === m);
     return { Month: monthName(m), Income: Math.round(T.inc), "Of which from Dad": Math.round(T.dad), Spending: Math.round(T.sp), "Left over": Math.round(T.inc - T.sp) }; });
   const all = totals(() => true);
   months.push({ Month: "Total", Income: Math.round(all.inc), "Of which from Dad": Math.round(all.dad), Spending: Math.round(all.sp), "Left over": Math.round(all.inc - all.sp) });
   const ms = XLSX.utils.json_to_sheet(months); ms["!cols"] = [{ wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 12 }];
   const cats = CAT_NAMES.filter(c => CATS[c] === "spend").map(c => { const row = { Category: c }; let tot = 0;
-    for (const m of MONTHS) { let v = 0; for (const t of TX) if (monthKey(t.date) === m) { const e = eff(t); if (e.cat === c) v += e.spend; } row[monthName(m)] = Math.round(v); tot += v; }
+    for (const m of MONTHS) { let v = 0; for (const t of TX) if (t.month === m) { const e = eff(t); if (e.cat === c) v += e.spend; } row[monthName(m)] = Math.round(v); tot += v; }
     row.Total = Math.round(tot); return row; }).filter(r => r.Total !== 0).sort((a, b) => b.Total - a.Total);
   const cs = XLSX.utils.json_to_sheet(cats); cs["!cols"] = [{ wch: 28 }, ...MONTHS.map(() => ({ wch: 9 })), { wch: 10 }];
   XLSX.utils.book_append_sheet(wb, ms, "Monthly summary");

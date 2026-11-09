@@ -148,6 +148,17 @@ def parse_unbilled(path):
             add(row["date"], account, row["desc"], num(row["amount"]), direction, source)
 
 
+def budget_month(t):
+    """Month a transaction counts toward. Salary paid from the 25th onward is next month's
+    salary (it arrives on the last working day of the previous month)."""
+    month = t["date"][:7]
+    if t["category"] == "Salary" and int(t["date"][8:10]) >= 25:
+        y, m = int(month[:4]), int(month[5:7])
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        month = f"{y:04d}-{m:02d}"
+    return month
+
+
 def apply_overrides(path):
     """overrides.csv: date,match,amount,category,note[,merchant] -- one-off fixes for specific rows."""
     with open(path, newline="") as f:
@@ -198,6 +209,10 @@ def main(data_dir, out_path):
         del t["_base"]
         assert t["category"] in CATEGORIES, t
         t["sub"] = subcategory(t["category"], t["merchant"], t["desc"])
+        t["month"] = budget_month(t)
+    start = os.environ.get("TRACK_FROM")  # e.g. 2026-08: drop everything budgeted before it
+    if start:
+        txns[:] = [t for t in txns if t["month"] >= start]
     txns.sort(key=lambda t: (t["date"], t["account"], t["desc"]))
     with open(out_path, "w") as f:
         json.dump(txns, f, ensure_ascii=False, indent=0)

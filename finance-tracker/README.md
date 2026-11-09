@@ -20,6 +20,9 @@ python3 -I parse.py <data_dir> <out_dir>/transactions.json
 python3 -I build.py <out_dir>/transactions.json <out_dir> [edits.json]
 ```
 
+Environment: `HDFC_CARD_PASSWORD` opens the HDFC PDFs, `TRACK_FROM=YYYY-MM` drops earlier months,
+`CASH_ON_HAND` (build only) shows your wallet cash in the notes.
+
 `edits.json` is the `settings/state` document the dashboard saves (row overrides
 and per-merchant rules), so the workbook can match the edits made on the page.
 
@@ -29,3 +32,6 @@ and per-merchant rules), so the workbook can match the edits made on the page.
 - Income categories: money in adds. "From Dad" is income, shown separately.
 - Excluded categories (own transfers, card bill payments, family transfers,
   lending) don't count unless switched on for a row.
+- Salary paid on or after the 25th counts toward the next month (it's that month's salary).
+- ATM withdrawals move cash into your wallet and aren't spending; cash you spend is
+  added as its own row in `adjustments.csv`.
