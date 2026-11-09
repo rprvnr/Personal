@@ -141,7 +141,7 @@ def build_xlsx(tx, out_dir, positions):
     ws.append(["Monthly average", "", f"=C{t}/{len(months)}", f"=D{t}/{len(months)}", f"=E{t}/{len(months)}",
                f"=F{t}/{len(months)}", f"=G{t}/{len(months)}", ""])
     # last three complete months (the latest month is usually partial)
-    l3 = months[-3:]
+    l3 = months[-4:-1] if len(months) >= 4 else months   # three complete months before the current one
     a, b = months.index(l3[0]) + 2, months.index(l3[-1]) + 2
     lbl = f"{mlabel[l3[0]][:3]}–{mlabel[l3[-1]][:3]}"
     ws.append([f"Last 3 months ({lbl})", "", *[f"=SUM({c}{a}:{c}{b})" for c in "CDEFG"], f'=IF(C{t + 2}=0,"",G{t + 2}/C{t + 2})'])
@@ -159,7 +159,7 @@ def build_xlsx(tx, out_dir, positions):
 
     # --- Spending by category x month ---
     wk = wb.create_sheet("Spending by category", 1)
-    l3 = months[-3:]
+    l3 = months[-4:-1] if len(months) >= 4 else months
     l3a, l3b = get_column_letter(months.index(l3[0]) + 2), get_column_letter(months.index(l3[-1]) + 2)
     header(wk, ["Category"] + [mlabel[m] for m in months] + ["Total", "Share", "Last 3 months, per month"],
            [30] + [11] * len(months) + [13, 8, 14])

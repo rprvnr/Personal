@@ -240,7 +240,7 @@ function renderMonths() {
   const el = document.getElementById("months");
   const first = TX.length ? TX[0].date : "", last = TX.length ? TX[TX.length - 1].date : "";
   const label = m => m === MONTHS[MONTHS.length - 1] ? `${monthName(m)} (so far)` : monthName(m);
-  el.innerHTML = [["all", `Last 3 months (${shortDate(first)} – ${shortDate(last)})`], ...MONTHS.map(m => [m, label(m)])]
+  el.innerHTML = [["all", `Since ${monthName(MONTHS[0])} (to ${shortDate(last)})`], ...MONTHS.map(m => [m, label(m)])]
     .map(([k, l]) => `<button class="chip" aria-pressed="${period === k}" data-k="${k}">${l}</button>`).join("");
   el.querySelectorAll("button").forEach(b => b.onclick = () => { period = b.dataset.k; shown = 150; render(); });
 }
@@ -429,14 +429,16 @@ function renderNow() {
   for (const c of POS.cards) {
     if (c.statement_left_to_pay > 0.5) {
       const late = c.due_date && c.due_date < today;
-      flags.push(`<div class="flag"><b>${esc(c.account)}</b><span>${fmt(c.statement_left_to_pay)} of the ${shortDate(c.statement_date)} statement (${fmt(c.statement_due)}) is still unpaid${late ? `, and its due date (${shortDate(c.due_date)}) has passed. Paying less than the full amount usually means interest on the whole balance, so clear it now.` : `. Due ${shortDate(c.due_date)}.`}</span></div>`);
+      flags.push(`<div class="flag${late ? "" : " warn"}"><b>${esc(c.account)}</b><span>My records show ${fmt(c.statement_left_to_pay)} of the ${shortDate(c.statement_date)} statement (${fmt(c.statement_due)}) not yet paid${late ? `, past its ${shortDate(c.due_date)} due date. If your app shows it paid, a payment didn't reach me: tell me and I'll mark it.` : `. Due ${shortDate(c.due_date)}.`}</span></div>`);
     }
+    if (c.confirmed && Math.abs(c.unexplained) > 0.5)
+      flags.push(`<div class="flag warn"><b>${esc(c.account)}</b><span>Your card app showed ${fmt(c.confirmed.amount)} on ${shortDate(c.confirmed.date)}; the transactions I have add up to ${fmt(c.computed_now)}. The ${fmt(Math.abs(c.unexplained))} gap is probably charges or credits that never sent an email alert. The next statement will show them; until then the dashboard uses your app's figure.</span></div>`);
     if (c.limit && c.outstanding_now / c.limit > 0.8)
       flags.push(`<div class="flag warn"><b>${esc(c.account)}</b><span>${fmt(c.outstanding_now)} used of a ${fmt(c.limit)} limit (${Math.round(c.outstanding_now / c.limit * 100)}%). Only ${fmt(c.limit - c.outstanding_now)} left.</span></div>`);
   }
   document.getElementById("now-flags").innerHTML = flags.join("");
   document.getElementById("now-cards").innerHTML = `<thead><tr><th>Card</th><th>Last statement</th><th>Paid / refunded since</th><th>Left on statement</th><th>New spends since</th><th>Owed now</th><th>Limit used</th></tr></thead><tbody>` +
-    POS.cards.map(c => `<tr><td>${esc(c.account)}</td><td>${fmt(c.statement_due)} <span class="muted">(${shortDate(c.statement_date)}, due ${shortDate(c.due_date)})</span></td><td>${fmt(c.paid_since_statement)}</td><td style="color:${c.statement_left_to_pay > 0.5 ? "var(--spend)" : "var(--income)"}">${c.statement_left_to_pay > 0.5 ? fmt(c.statement_left_to_pay) : "Paid"}</td><td>${fmt(c.new_spends_since_statement)}</td><td><b>${fmt(c.outstanding_now)}</b></td><td>${c.limit ? Math.round(c.outstanding_now / c.limit * 100) + "% of " + fmtK(c.limit) : "–"}</td></tr>`).join("") + "</tbody>";
+    POS.cards.map(c => `<tr><td>${esc(c.account)}</td><td>${fmt(c.statement_due)} <span class="muted">(${shortDate(c.statement_date)}, due ${shortDate(c.due_date)})</span></td><td>${fmt(c.paid_since_statement)}</td><td style="color:${c.statement_left_to_pay > 0.5 ? "var(--spend)" : "var(--income)"}">${c.statement_left_to_pay > 0.5 ? fmt(c.statement_left_to_pay) : "Paid on time"}</td><td>${fmt(c.new_spends_since_statement)}</td><td><b>${fmt(c.outstanding_now)}</b>${c.confirmed ? `<br><span class="muted" style="font-size:11px">per your app, ${shortDate(c.confirmed.date)}</span>` : ""}</td><td>${c.limit ? Math.round(c.outstanding_now / c.limit * 100) + "% of " + fmtK(c.limit) : "–"}</td></tr>`).join("") + "</tbody>";
   document.getElementById("now-banks").innerHTML = `<thead><tr><th>Account</th><th>Balance</th><th>As of</th></tr></thead><tbody>` +
     POS.banks.map(b => `<tr><td>${esc(b.account)}</td><td>${fmt(b.balance)}</td><td class="muted">${shortDate(b.as_of)}</td></tr>`).join("") +
     (POS.other || []).filter(o => o.type === "cash").map(o => `<tr><td>${esc(o.label)}</td><td>${fmt(o.amount)}</td><td class="muted">you told me</td></tr>`).join("") + "</tbody>";
@@ -517,7 +519,7 @@ async function setupRefresh() {
 }
 
 // ---------- boot ----------
-document.getElementById("sub").textContent = `${TX.length} transactions · ${shortDate(TX[0].date)} – ${shortDate(TX[TX.length - 1].date)} · ${[...new Set(TX.map(t => t.account))].filter(a => a !== "Adjustment").length} accounts and cards · last updated ${DATA.built}`;
+document.getElementById("sub").textContent = `${TX.length} transactions · ${monthName(MONTHS[0])} – ${shortDate(TX[TX.length - 1].date)} · ${[...new Set(TX.map(t => t.account))].filter(a => a !== "Adjustment").length} accounts and cards · last updated ${DATA.built}`;
 try { const s = JSON.parse(localStorage.getItem("money-tracker-state") || "null"); if (s) state = { overrides: s.overrides || {}, rules: s.rules || {} }; } catch (e) {}
 fillSelects();
 renderGaps();

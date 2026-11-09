@@ -335,12 +335,14 @@ def positions(all_rows, extra_path):
     position.csv (label,amount,type,account) adds cash on hand (type cash), money owed to you
     (owed_to_you) and card limits (card_limit, with the card's account name)."""
     out = {"banks": [], "cards": [], "other": []}
-    limits = {}
+    limits, confirmed = {}, {}
     if os.path.exists(extra_path):
         with open(extra_path, newline="") as f:
             for row in csv.DictReader(f):
                 if row["type"] == "card_limit":
                     limits[row["account"]] = num(row["amount"])
+                elif row["type"] == "card_confirmed":   # balance read off the card app; label = date
+                    confirmed[row["account"]] = (row["label"], num(row["amount"]))
                 else:
                     out["other"].append({"label": row["label"], "amount": num(row["amount"]), "type": row["type"]})
     for acct, b in sorted(balances.items()):
@@ -360,6 +362,17 @@ def positions(all_rows, extra_path):
             "new_spends_since_statement": round(spent, 2),
             "outstanding_now": round(c["due"] + spent - credits, 2), "limit": limits.get(acct),
             "as_of": max([c["date"]] + [r["date"] for r in later])})
+        card = out["cards"][-1]
+        if acct in confirmed and confirmed[acct][0] >= c["date"]:
+            # The card app's figure wins. Rows after that date still move it. The gap to our own
+            # total is shown, not hidden, until the next statement explains it.
+            cdate, camt = confirmed[acct]
+            after = sum(r["amount"] if r["dir"] == "out" else -r["amount"] for r in later if r["date"] > cdate)
+            card["computed_now"] = card["outstanding_now"]
+            card["outstanding_now"] = round(camt + after, 2)
+            card["confirmed"] = {"date": cdate, "amount": camt}
+            card["unexplained"] = round(card["outstanding_now"] - card["computed_now"], 2)
+            card["statement_left_to_pay"] = 0.0   # confirmed paid in full and on time
     return out
 
 
