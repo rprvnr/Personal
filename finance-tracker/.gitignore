@@ -1,0 +1,9 @@
+# Raw statements and generated outputs contain personal financial data: never commit them.
+data/
+out/
+*.xls
+*.xlsx
+*.csv
+*.json
+index.html
+__pycache__/
