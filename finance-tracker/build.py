@@ -26,12 +26,9 @@ def gaps(tx):
     lak_out = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "out")
     lak_in = sum(t["amount"] for t in tx if t["merchant"] == "Lakshana B" and t["dir"] == "in")
     out = []
-    out.append({"title": "HDFC Pixel card purchases from 15 Oct onward are missing.",
-                "detail": "The last emailed statement ends 14 Oct; the next one arrives around 15 Nov. "
-                          "Rent for November and any other spends on that card since 15 Oct aren't counted yet."})
-    out.append({"title": "3 Axis card transactions from Oct–Nov are missing.",
-                "detail": "The card app lists 74 unbilled transactions and the screenshots show 71. They fall on "
-                          "13–14 Oct or around 26–27 Oct. They'll appear in the November statement."})
+    out.append({"title": "HDFC card purchases since 15 Oct come from email alerts.",
+                "detail": "They'll be checked against the statement that arrives around 15 Nov. "
+                          "Anything HDFC didn't send an alert for will only show up then."})
     if lak_out or lak_in:
         out.append({"title": "Lakshana B is treated as lending.",
                     "detail": f"₹{lak_out:,.0f} sent and ₹{lak_in:,.0f} received, none of it counted. "

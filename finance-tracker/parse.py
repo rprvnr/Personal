@@ -6,7 +6,8 @@ Expected files in <data_dir> (raw statements stay outside the repo):
   hdfc_savings_*.xls      HDFC NetBanking "Excel" account statement
   axis_savings_*.csv      Axis account statement CSV (one file per account)
   axis_card_*.xlsx        Axis credit card monthly statement (xlsx export)
-  axis_card_unbilled.csv  date,desc,amount,dc  (hand-entered unbilled rows)
+  axis_card_unbilled.csv  date,desc,amount,dc  (unbilled rows copied from the card app)
+  hdfc_card_unbilled.csv  date,desc,amount,dc  (unbilled rows from HDFC email alerts)
   hdfc_card_*.pdf         HDFC Pixel card statement PDFs; set HDFC_CARD_PASSWORD to open them
 """
 import csv
@@ -131,12 +132,18 @@ def parse_hdfc_card(path, password):
         add(date, card or "HDFC Pixel card", desc, num(amt), "in" if plus else "out", os.path.basename(path))
 
 
+UNBILLED = {
+    "axis_card_unbilled.csv": ("Axis Card ··1282", "Axis card app screenshots"),
+    "hdfc_card_unbilled.csv": ("HDFC Pixel Visa ··1376", "HDFC card email alerts"),
+}
+
+
 def parse_unbilled(path):
+    account, source = UNBILLED[os.path.basename(path)]
     with open(path, newline="") as f:
         for row in csv.DictReader(f):
             direction = "in" if row["dc"] == "Credit" else "out"
-            add(row["date"], "Axis Card ··1282", row["desc"], num(row["amount"]), direction,
-                "axis card screenshots")
+            add(row["date"], account, row["desc"], num(row["amount"]), direction, source)
 
 
 def main(data_dir, out_path):
@@ -150,9 +157,10 @@ def main(data_dir, out_path):
     for p in sorted(glob.glob(os.path.join(data_dir, "hdfc_card_*.pdf"))):
         if pw:
             parse_hdfc_card(p, pw)
-    unbilled = os.path.join(data_dir, "axis_card_unbilled.csv")
-    if os.path.exists(unbilled):
-        parse_unbilled(unbilled)
+    for name in UNBILLED:
+        unbilled = os.path.join(data_dir, name)
+        if os.path.exists(unbilled):
+            parse_unbilled(unbilled)
     for t in txns:
         del t["_base"]
     txns.sort(key=lambda t: (t["date"], t["account"], t["desc"]))
