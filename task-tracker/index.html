@@ -409,7 +409,8 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     h += '<div class="task-main"><button class="check" data-check="' + t.id + '" aria-label="' + (done ? "Mark not done: " : "Mark done: ") + esc(t.text) + '">' + CHECK + "</button>";
     h += '<button class="task-text" data-open="' + t.id + '" aria-expanded="' + (openId === t.id) + '">' + esc(t.text) +
          (filter === "personal" && t.tag && t.tag !== "Personal" ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") +
-         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button></div>";
+         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
+         '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button></div>";
     h += '<div class="actions">';
     if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
     h += '<button class="chip" data-edit="' + t.id + '">Edit</button><button class="chip danger" data-del="' + t.id + '">Delete</button>';
@@ -739,20 +740,18 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   });
 
   /* Drag to reorder: grab the dotted handle, drop anywhere in Now / Next / Later / Done (or on a collapsed section's header). */
-  /* Hold a task for a moment, then drag it. A quick tap still opens it; a swipe still scrolls. */
+  /* Drag a task by its dotted handle. */
   var drag = null, press = null;
   root.addEventListener("pointerdown", function (ev) {
     suppressClick = false;
-    if (drag || ev.button > 0) return;
-    var main = ev.target.closest(".task-main"); if (!main || ev.target.closest(".check")) return;
-    var li = main.closest(".task"); if (li.classList.contains("editing")) return;
-    press = { x: ev.clientX, y: ev.clientY, timer: setTimeout(function () { var p0 = press; press = null; if (p0) startDrag(li, main, p0.x, p0.y, ev.pointerId); }, 380) };
+    var g = ev.target.closest(".grip"); if (!g || drag || ev.button > 0) return;
+    ev.preventDefault();
+    startDrag(g.closest(".task"), g, ev.clientX, ev.clientY, ev.pointerId);
   });
   function cancelPress() { if (press) { clearTimeout(press.timer); press = null; } }
   document.addEventListener("touchmove", function (ev) { if (drag) ev.preventDefault(); }, { passive: false });
   function startDrag(li, g, cx, cy, pid) {
     suppressClick = true;
-    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
     var r = li.getBoundingClientRect();
     var ghost = li.cloneNode(true);
     ghost.className = "task ghost" + (li.classList.contains("done") ? " done" : "");
