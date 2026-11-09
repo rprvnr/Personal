@@ -111,7 +111,7 @@ section.collapsed .list { display: none; }
 .task.done .task-text, .task.ticking .task-text { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
 .tag { display: inline-block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
 .tag { color: var(--tc, var(--muted)); border-color: color-mix(in srgb, var(--tc, var(--line)) 35%, transparent); }
-.when { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
+.when { display: inline-block; width: 100%; font-family: var(--font-mono); font-size: 11px; color: var(--done); opacity: .8; margin-top: 3px; text-decoration: none; }
 .task.open { background: var(--surface-2); }
 .actions { display: none; gap: 6px; flex-wrap: wrap; padding: 0 12px 10px 46px; }
 .task.open .actions { display: flex; }
@@ -236,11 +236,12 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  var collapsed = lsGet("tasks-collapsed", { done: true, bought: true });
+  var collapsed = lsGet("tasks-collapsed-v2", { bought: true });
+  var showOlderDone = false;
   var filter = lsGet("tasks-filter", "personal");
   if (filter === "all") filter = "personal";
   var addOpen = false, suppressClick = false;
-  function saveCollapsed() { lsSet("tasks-collapsed", collapsed); }
+  function saveCollapsed() { lsSet("tasks-collapsed-v2", collapsed); }
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
   function pad(n) { return n < 10 ? "0" + n : "" + n; }
@@ -342,16 +343,23 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
     (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) {
       var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t); });
+      var older = 0;
+      if (s.key === "done" && !showOlderDone) {
+        var wk = weekAgo(), all = items.length;
+        items = items.filter(function (t) { return t.doneAt && t.doneAt >= wk; });
+        older = all - items.length;
+      }
       var isCol = !!collapsed[s.key];
       h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
       h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
            (isDoneSec(s.key) ? '<span class="count">' + items.length + "</span>" : "") + "</button>";
       h += '<ul class="list">';
-      if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Ticked tasks land here." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
+      if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Nothing ticked off this week yet." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
       if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
       items.forEach(function (t) { h += taskHtml(t); });
       h += "</ul>";
-      if (isDoneSec(s.key) && items.length && !isCol) h += '<button class="btn clear" data-clear="' + s.key + '">' + (s.key === "bought" ? "Clear bought" : "Clear done") + "</button>";
+      if (older && !isCol) h += '<button class="btn clear" data-older="1">Show ' + older + " older</button>";
+      if (s.key === "bought" && items.length && !isCol) h += '<button class="btn clear" data-clear="bought">Clear bought</button>';
       h += "</section>";
     });
     root.innerHTML = h;
@@ -651,6 +659,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     var b = ev.target.closest("button"); if (!b) return;
     var d = b.dataset;
     if (d.scan) { scan(); return; }
+    if (d.older) { showOlderDone = true; render(); return; }
     if (d.addopen) { addOpen = true; focusAdd = true; render(); return; }
     if (d.addclose) { addOpen = false; addTag = null; render(); return; }
     if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
