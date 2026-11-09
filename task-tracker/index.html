@@ -21,6 +21,7 @@
   --done: #3ddc84;
   --inbox: #a78bfa;
   --shop: #f472b6;
+  --today: #f1f1f5;
   --t-work: #ff9f43;
   --t-personal: #a3e635;
   --t-errands: #60a5fa;
@@ -118,6 +119,16 @@ section.collapsed .list { display: none; }
 .chip.danger { color: var(--danger); border-color: rgba(255,107,107,.35); }
 .edit { display: none; gap: 8px; padding: 0 12px 10px 46px; }
 .task.editing .edit { display: flex; }
+.task .edit { flex-wrap: wrap; }
+.task .edit input[type="text"], .task .edit > input:first-child { flex: 1 1 100%; }
+.edit .opts { display: flex; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.edit input[type="date"], .edit select { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: #000; color: var(--ink); color-scheme: dark; }
+.meta { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; margin-left: 8px; vertical-align: 1px; color: var(--muted); white-space: nowrap; }
+.meta.due-today { color: var(--now); }
+.meta.overdue { color: var(--danger); }
+.meta.stuck { color: #ffb86b; opacity: .85; }
+.today-hint { padding: 11px 14px; font-size: 13px; color: var(--muted); }
+.today-done { padding: 11px 14px; font-size: 14px; font-weight: 600; color: var(--done); }
 .task.editing .actions { display: none; }
 .edit input { flex: 1; min-width: 0; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--accent); background: #000; color: var(--ink); }
 .edit .btn { min-height: 40px; padding: 0 14px; }
@@ -199,7 +210,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 <body>
 <div class="wrap" id="root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
-<script id="state" type="application/json">{"tasks": [{"id": "t114", "text": "Finance tracker", "sec": "now", "tag": "Personal"}, {"id": "t113", "text": "Book room for parents", "sec": "later", "tag": "Personal"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t112", "text": "Shelf or organiser", "sec": "shop"}, {"id": "t111", "text": "Nail paint", "sec": "shop"}, {"id": "t106", "text": "Guide Pallika on updating raw data workbook with Claude", "sec": "next", "tag": "Work"}, {"id": "t105", "text": "Review survey slides in detail and leave comments", "sec": "now", "tag": "Work"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "now", "tag": "Personal"}, {"id": "t104", "text": "Clean the room", "sec": "now", "tag": "Home"}, {"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "now", "tag": "Work"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "next", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "later", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t36", "text": "Glean setup", "sec": "now", "tag": "Work"}, {"id": "t30", "text": "Hang poster", "sec": "now", "tag": "Home"}, {"id": "t45", "text": "Go swimming", "sec": "now", "tag": "Goals"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "now", "tag": "Personal"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "now", "tag": "Personal"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "now", "tag": "Personal"}, {"id": "t103", "text": "Set up Claude for Lux and build a tracker for her", "sec": "now", "tag": "Personal"}, {"id": "t19", "text": "Get car and install Head light", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t5", "text": "Office infrastructure message", "sec": "next", "tag": "Work"}, {"id": "t47", "text": "Drink matcha", "sec": "next", "tag": "Personal"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "Work"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat (around Nov 21)", "sec": "next", "tag": "Personal"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Personal"}, {"id": "t21", "text": "Clean shoes", "sec": "later", "tag": "Errands"}, {"id": "t16", "text": "Blood tests", "sec": "later", "tag": "Errands"}, {"id": "t8", "text": "Book Mumbai flights", "sec": "later", "tag": "Personal"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Home"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Personal"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Personal"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Goals"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "bought", "from": "shop", "doneAt": "2026-11-09"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "shop"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}], "nextId": 116, "inbox": {"lastScan": "2026-11-08T07:56:41.202Z", "items": [], "lastScanFlow": "2026-11-08T07:56:41.202Z"}, "routines": [{"id": "r1", "name": "Shower", "times": 2}, {"id": "r2", "name": "Work out", "times": 1}, {"id": "r3", "name": "Take meds", "times": 1}], "log": {}}</script>
+<script id="state" type="application/json">{"tasks": [{"id": "t114", "text": "Finance tracker", "sec": "now", "tag": "Personal"}, {"id": "t113", "text": "Book room for parents", "sec": "later", "tag": "Personal"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t112", "text": "Shelf or organiser", "sec": "shop"}, {"id": "t111", "text": "Nail paint", "sec": "shop"}, {"id": "t106", "text": "Guide Pallika on updating raw data workbook with Claude", "sec": "next", "tag": "Work"}, {"id": "t105", "text": "Review survey slides in detail and leave comments", "sec": "now", "tag": "Work"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "now", "tag": "Personal"}, {"id": "t104", "text": "Clean the room", "sec": "now", "tag": "Home"}, {"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "now", "tag": "Work"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "now", "tag": "Work"}, {"id": "t3", "text": "BPM ATU materials", "sec": "next", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "now", "tag": "Work"}, {"id": "t4", "text": "Sanofi AE training", "sec": "now", "tag": "Work"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "later", "tag": "Work"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal"}, {"id": "t36", "text": "Glean setup", "sec": "now", "tag": "Work"}, {"id": "t30", "text": "Hang poster", "sec": "now", "tag": "Home"}, {"id": "t45", "text": "Go swimming", "sec": "now", "tag": "Goals"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "now", "tag": "Personal"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "now", "tag": "Personal"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "now", "tag": "Personal"}, {"id": "t103", "text": "Set up Claude for Lux and build a tracker for her", "sec": "now", "tag": "Personal"}, {"id": "t19", "text": "Get car and install Head light", "sec": "now", "tag": "Personal"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t5", "text": "Office infrastructure message", "sec": "next", "tag": "Work"}, {"id": "t47", "text": "Drink matcha", "sec": "next", "tag": "Personal"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "Work"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat", "sec": "next", "tag": "Personal", "due": "2026-11-21"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "next", "tag": "Work"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Personal"}, {"id": "t21", "text": "Clean shoes", "sec": "later", "tag": "Errands"}, {"id": "t16", "text": "Blood tests", "sec": "later", "tag": "Errands"}, {"id": "t8", "text": "Book Mumbai flights", "sec": "later", "tag": "Personal"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Home"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Personal"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Personal"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Goals"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "bought", "from": "shop", "doneAt": "2026-11-09"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "shop"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}], "nextId": 116, "inbox": {"lastScan": "2026-11-08T07:56:41.202Z", "items": [], "lastScanFlow": "2026-11-08T07:56:41.202Z"}, "routines": [{"id": "r1", "name": "Shower", "times": 2}, {"id": "r2", "name": "Work out", "times": 1}, {"id": "r3", "name": "Take meds", "times": 1}], "log": {}}</script>
 <script id="app">
 (function () {
   var SECS = [
@@ -258,6 +269,25 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   }
   function find(id) { for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i]; return null; }
   function snapshot() { return JSON.stringify(state); }
+  function addDays(key, n) { var d = new Date(key + "T12:00:00"); d.setDate(d.getDate() + n); return ymd(d); }
+  function daysBetween(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000); }
+  function isToday(t) { return t.star === today(); }
+  var REPEATS = [[0, "Doesn't repeat"], [7, "Every week"], [14, "Every 2 weeks"], [30, "Every month"]];
+  /* Keep derived fields honest: dated tasks jump to Now on their day; Now remembers since when (for "stuck"). */
+  function normalize() {
+    var td = today();
+    state.tasks.forEach(function (t) {
+      if (t.due && t.due <= td && (t.sec === "next" || t.sec === "later")) t.sec = "now";
+      if (t.sec === "now") { if (!t.nowSince) t.nowSince = td; } else if (t.nowSince) delete t.nowSince;
+      if (t.star && t.star !== td) delete t.star;
+    });
+  }
+  function spawnRepeat(t) {
+    if (!t.every) return;
+    var c = { id: "t" + (state.nextId++), text: t.text, sec: "later", every: t.every, due: addDays(today(), t.every) };
+    if (t.tag) c.tag = t.tag;
+    state.tasks.push(c);
+  }
   function isWork(t) { return t.tag === "Work"; }
   function visible(t) { if (filter === "daily") return false; if (filter === "all") filter = "personal"; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
   function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
@@ -341,8 +371,19 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     h += addHtml();
     if (filter === "work") h += inboxHtml();
 
+    if (filter !== "shop") {
+      var picks = state.tasks.filter(function (t) { return isToday(t) && (filter === "work" ? isWork(t) : !isWork(t)) && !isShopSec(t.sec); });
+      var left = picks.filter(function (t) { return !isDoneSec(t.sec); }).length;
+      h += '<section data-sec="today" style="--c:var(--today)"><div class="sec-head" style="cursor:default"><span class="pill">★ Today</span>' +
+           (picks.length ? '<span class="count">' + (picks.length - left) + " of " + picks.length + "</span>" : "") + "</div><ul class=\"list\">";
+      if (!picks.length) h += '<li class="today-hint">Pick up to 3: tap a task, then ★ Today.</li>';
+      picks.forEach(function (t) { h += taskHtml(t, true); });
+      if (picks.length && !left) h += '<li class="today-done">All done for today. Nice work.</li>';
+      h += "</ul></section>";
+    }
+
     (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) {
-      var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t); });
+      var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t) && !isToday(t); });
       var older = 0;
       if (s.key === "done" && !showOlderDone) {
         var wk = weekAgo(), all = items.length;
@@ -364,7 +405,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     });
     root.innerHTML = h;
     if (addOpen && focusAdd) { focusAdd = false; var ai = document.getElementById("addInput"); if (ai) ai.focus(); }
-    if (editId) { var ei = document.getElementById("edit-" + editId); if (ei) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
+    if (editId) { var ei = document.getElementById("edit-" + editId); if (ei && ei.closest(".task").classList.contains("editing")) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
   }
 
   var focusAdd = false;
@@ -410,18 +451,31 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     return h;
   }
 
-  function taskHtml(t) {
+  function metaHtml(t) {
+    if (isDoneSec(t.sec) || isShopSec(t.sec)) return "";
+    var h = "", td = today();
+    if (t.due) {
+      var cls = t.due < td ? "overdue" : t.due === td ? "due-today" : "";
+      h += '<span class="meta ' + cls + '">' + (t.due === td ? "Today" : fmtDate(t.due)) + "</span>";
+    }
+    if (t.every) h += '<span class="meta" title="Repeats">↻</span>';
+    if (t.sec === "now" && t.nowSince) { var age = daysBetween(t.nowSince, td); if (age >= 10) h += '<span class="meta stuck">stuck ' + age + "d</span>"; }
+    return h;
+  }
+
+  function taskHtml(t, inToday) {
     var done = isDoneSec(t.sec), shopItem = isShopSec(t.sec);
     var cls = "task" + (done ? " done" : "") + (openId === t.id ? " open" : "") + (editId === t.id ? " editing" : "");
     var h = '<li class="' + cls + '" data-id="' + t.id + '">';
     h += '<div class="task-main"><button class="check" data-check="' + t.id + '" aria-label="' + (done ? "Mark not done: " : "Mark done: ") + esc(t.text) + '">' + CHECK + "</button>";
     h += '<button class="task-text" data-open="' + t.id + '" aria-expanded="' + (openId === t.id) + '">' + esc(t.text) +
-         (filter === "personal" && t.tag && t.tag !== "Personal" ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") +
+         (filter === "personal" && t.tag && t.tag !== "Personal" ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") + metaHtml(t) +
          (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
-         '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button></div>";
+         (inToday ? "" : '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button>") + "</div>";
     h += '<div class="actions">';
+    if (!done && !shopItem) h += '<button class="chip" style="--c:var(--today)" data-star="' + t.id + '">' + (isToday(t) ? "☆ Remove from Today" : "★ Today") + "</button>";
     if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
-    h += '<button class="chip" data-edit="' + t.id + '">Edit</button><button class="chip danger" data-del="' + t.id + '">Delete</button>';
+    h += '<button class="chip" data-edit="' + t.id + '">' + (shopItem || done ? "Edit" : "Edit · date · repeat") + "</button>" + '<button class="chip danger" data-del="' + t.id + '">Delete</button>';
     if (!done && !shopItem) {
       h += '<span style="width:100%"></span>';
       if (filter === "personal") PTAGS.forEach(function (tg) { h += '<button class="chip" style="--c:' + tagColor(tg) + '" data-settag="' + t.id + '" data-tag="' + tg + '" aria-pressed="' + ((t.tag || "Personal") === tg) + '"><span class="d"></span>' + tg + "</button>"; });
@@ -430,7 +484,13 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     }
     if (t.sec === "shop") h += '<button class="chip" data-totask="' + t.id + '">→ Make it a task</button>';
     h += "</div>";
-    h += '<form class="edit" data-editform="' + t.id + '"><input id="edit-' + t.id + '" aria-label="Edit task" value="' + esc(t.text) + '" enterkeyhint="done"><button class="btn btn-primary" type="submit">Save</button></form>';
+    h += '<form class="edit" data-editform="' + t.id + '"><input type="text" id="edit-' + t.id + '" aria-label="Edit task" value="' + esc(t.text) + '" enterkeyhint="done">';
+    if (!done && !shopItem) {
+      h += '<div class="opts"><input type="date" name="due" aria-label="Date" value="' + esc(t.due || "") + '"><select name="every" aria-label="Repeat">';
+      REPEATS.forEach(function (r) { h += '<option value="' + r[0] + '"' + ((t.every || 0) === r[0] ? " selected" : "") + ">" + r[1] + "</option>"; });
+      h += "</select></div>";
+    }
+    h += '<button class="btn btn-primary" type="submit">Save</button></form>';
     return h + "</li>";
   }
 
@@ -444,6 +504,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
 
   function showToast(msg, snap) {
     undoSnap = snap;
+    document.getElementById("toastUndo").style.display = snap ? "" : "none";
     document.getElementById("toastMsg").textContent = msg;
     var t = document.getElementById("toast"); t.classList.add("show");
     clearTimeout(toastTimer);
@@ -462,6 +523,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   }
 
   function changed() {
+    normalize();
     render();
     if (canSave === false) return;
     setSync("busy", "Saving");
@@ -660,6 +722,13 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     var d = b.dataset;
     if (d.scan) { scan(); return; }
     if (d.older) { showOlderDone = true; render(); return; }
+    if (d.star) {
+      var st = find(d.star); if (!st) return;
+      if (isToday(st)) { delete st.star; openId = null; changed(); return; }
+      var n3 = state.tasks.filter(function (x) { return isToday(x) && isWork(x) === isWork(st); }).length;
+      if (n3 >= 3) { showToast("Today already has 3. Remove one first.", null); return; }
+      st.star = today(); openId = null; changed(); return;
+    }
     if (d.addopen) { addOpen = true; focusAdd = true; render(); return; }
     if (d.addclose) { addOpen = false; addTag = null; render(); return; }
     if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
@@ -702,6 +771,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       setTimeout(function () {
         var toShop = t.sec === "shop";
         t.from = t.sec; t.sec = toShop ? "bought" : "done"; t.doneAt = today(); openId = null; editId = null;
+        if (!toShop) spawnRepeat(t);
         showToast((toShop ? "Bought: " : "Done: ") + t.text, snap); changed();
       }, 520);
       return;
@@ -735,8 +805,14 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
       if (rr && nv) rr.name = nv; editR = null; openR = null; changed(); return;
     }
     if (f.dataset && f.dataset.editform) {
-      var t = find(f.dataset.editform), v = (f.querySelector("input").value || "").trim();
+      var t = find(f.dataset.editform), v = (f.querySelector('input[type="text"]').value || "").trim();
       if (t && v) t.text = v;
+      if (t && f.elements.due) {
+        var dv = f.elements.due.value, ev = +f.elements.every.value, oldDue = t.due;
+        if (dv) t.due = dv; else delete t.due;
+        if (ev) t.every = ev; else delete t.every;
+        if (t.due && t.due > today() && t.sec === "now" && t.due !== oldDue) t.sec = "next";
+      }
       editId = null; openId = null; changed(); return;
     }
     var input = document.getElementById("addInput");
@@ -781,6 +857,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   function dragTo(x, y) {
     drag.ghost.style.top = (y - drag.dy) + "px";
     var el = document.elementFromPoint(x, y); if (!el) return;
+    if (el.closest('section[data-sec="today"]')) return;
     var head = el.closest(".sec-head");
     if (head) {
       var sec = head.closest("section");
@@ -822,7 +899,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     if (cancel || !sec || !t) { render(); return; }
     var before = snapshot(), prev = t.sec;
     state.tasks = state.tasks.filter(function (x) { return x !== t; });
-    if (isDoneSec(sec) && !isDoneSec(prev)) { t.from = prev; t.doneAt = today(); }
+    if (isDoneSec(sec) && !isDoneSec(prev)) { t.from = prev; t.doneAt = today(); if (sec === "done") spawnRepeat(t); }
     if (!isDoneSec(sec) && isDoneSec(prev)) { delete t.from; delete t.doneAt; }
     t.sec = sec;
     var idx = -1, i;
@@ -839,6 +916,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
   document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
 
 
+  var bootSnap = snapshot(); normalize(); var bootDirty = snapshot() !== bootSnap;
   render();
 
   var tries = 0;
@@ -849,7 +927,7 @@ body.dragging .add, body.dragging .toast { pointer-events: none; }
     }
     window.claude.use("artifact").then(function (a) {
       artifact = a;
-      if (a) { canSave = true; setSync("ok", "Synced"); }
+      if (a) { canSave = true; setSync("ok", "Synced"); if (bootDirty) { bootDirty = false; changed(); } }
       else { canSave = false; setSync("warn", "View only"); }
     }).catch(function () { canSave = false; setSync("warn", "View only"); });
   })();
