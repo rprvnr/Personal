@@ -201,13 +201,15 @@ function eff(t) {
   return { cat, group, inc, spend, income, edited: !!(state.overrides[t.id] || state.rules[t.merchant]) };
 }
 
-function inPeriod(t) { return period === "all" || monthKey(t.date) === period; }
-
 const MONTHS = [...new Set(TX.map(t => monthKey(t.date)))].sort();
+// "Last 3 months" = the three complete months before the current (partial) month.
+const LAST3 = MONTHS.slice(-4, -1);
+function periodMonths() { return period === "all" ? MONTHS : period === "last3" ? LAST3 : [period]; }
+function inPeriod(t) { return period === "all" || periodMonths().includes(monthKey(t.date)); }
 
 function renderMonths() {
   const el = document.getElementById("months");
-  el.innerHTML = [["all", "All months"], ...MONTHS.map(m => [m, monthName(m)])]
+  el.innerHTML = [["all", "All months"], ["last3", `Last 3 months (${monthName(LAST3[0])} – ${monthName(LAST3[2])})`], ...MONTHS.map(m => [m, monthName(m)])]
     .map(([k, l]) => `<button class="chip" aria-pressed="${period === k}" data-k="${k}">${l}</button>`).join("");
   el.querySelectorAll("button").forEach(b => b.onclick = () => { period = b.dataset.k; shown = 150; render(); });
 }
@@ -221,7 +223,7 @@ function totals(filter) {
 function renderTiles() {
   const T = totals(inPeriod);
   const own = T.inc - T.dad;
-  const n = period === "all" ? MONTHS.length : 1;
+  const n = periodMonths().length;
   const saved = T.inc - T.sp;
   const rate = T.inc ? Math.round(saved / T.inc * 100) : 0;
   document.getElementById("tiles").innerHTML = `
@@ -247,8 +249,8 @@ function renderChart() {
   let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Monthly income and spending">`;
   for (let v = 0; v <= ymax; v += step) s += `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${fmtK(v)}</text>`;
   rows.forEach((r, i) => {
-    const x = L + i * bw + bw * 0.14, w = bw * 0.34, sel = period === r.m;
-    const op = period === "all" || sel ? 1 : 0.35;
+    const x = L + i * bw + bw * 0.14, w = bw * 0.34, sel = periodMonths().includes(r.m);
+    const op = sel ? 1 : 0.35;
     s += `<g opacity="${op}" style="cursor:pointer" data-m="${r.m}">`;
     s += `<rect x="${x}" y="${y(Math.max(r.inc, 0))}" width="${w}" height="${y(0) - y(Math.max(r.inc, 0))}" rx="3" fill="var(--income)"/>`;
     if (r.dad > 0) s += `<rect x="${x}" y="${y(Math.max(r.inc, 0))}" width="${w}" height="${y(0) - y(r.dad)}" rx="3" fill="var(--muted)" opacity=".8"/>`;

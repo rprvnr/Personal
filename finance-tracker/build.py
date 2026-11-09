@@ -133,20 +133,29 @@ def build_xlsx(tx, out_dir):
                f"=SUM(F2:F{last})", f"=SUM(G2:G{last})", f'=IF(C{t}=0,"",G{t}/C{t})'])
     ws.append(["Monthly average", "", f"=C{t}/{len(months)}", f"=D{t}/{len(months)}", f"=E{t}/{len(months)}",
                f"=F{t}/{len(months)}", f"=G{t}/{len(months)}", ""])
-    for row in ws.iter_rows(min_row=2, max_row=t + 1):
+    # last three complete months (the latest month is usually partial)
+    l3 = months[-4:-1] if len(months) >= 4 else months
+    a, b = months.index(l3[0]) + 2, months.index(l3[-1]) + 2
+    lbl = f"{mlabel[l3[0]][:3]}–{mlabel[l3[-1]][:3]}"
+    ws.append([f"Last 3 months ({lbl})", "", *[f"=SUM({c}{a}:{c}{b})" for c in "CDEFG"], f'=IF(C{t + 2}=0,"",G{t + 2}/C{t + 2})'])
+    ws.append([f"Last 3 months, per month", "", *[f"={c}{t + 2}/3" for c in "CDEFG"], ""])
+    for row in ws.iter_rows(min_row=2, max_row=t + 3):
         for c in row[2:7]:
             c.number_format = INR
         row[7].number_format = "0%"
-    for c in ws[t] + ws[t + 1]:
+    for c in ws[t] + ws[t + 1] + ws[t + 2] + ws[t + 3]:
         c.font = Font(bold=True)
+    ws.column_dimensions["A"].width = 26
     ws.column_dimensions["B"].hidden = True
-    ws.cell(row=t + 3, column=1, value="Edit the Category or 'Count it?' columns on the Transactions sheet; "
+    ws.cell(row=t + 5, column=1, value="Edit the Category or 'Count it?' columns on the Transactions sheet; "
                                        "every total here updates.").font = Font(italic=True, color="6B7280")
 
     # --- Spending by category x month ---
     wk = wb.create_sheet("Spending by category", 1)
-    header(wk, ["Category"] + [mlabel[m] for m in months] + ["Total", "Share"],
-           [30] + [11] * len(months) + [13, 8])
+    l3 = months[-4:-1] if len(months) >= 4 else months
+    l3a, l3b = get_column_letter(months.index(l3[0]) + 2), get_column_letter(months.index(l3[-1]) + 2)
+    header(wk, ["Category"] + [mlabel[m] for m in months] + ["Total", "Share", "Last 3 months, per month"],
+           [30] + [11] * len(months) + [13, 8, 14])
     spend_cats = [c for c, g in CATEGORIES.items() if g == "spend"]
     tot_col = get_column_letter(len(months) + 2)
     share_col = get_column_letter(len(months) + 3)
@@ -157,14 +166,17 @@ def build_xlsx(tx, out_dir):
             row.append(f'=SUMIFS({rng("J")},{rng("E")},$A{r},{rng("B")},"{m}")')
         row.append(f"=SUM(B{r}:{get_column_letter(len(months) + 1)}{r})")
         row.append(f"=IF(${tot_col}${end_row + 1}=0,0,{tot_col}{r}/${tot_col}${end_row + 1})")
+        row.append(f"=SUM({l3a}{r}:{l3b}{r})/3")
         wk.append(row)
+    l3col = get_column_letter(len(months) + 4)
     total_row = ["Total"] + [f"=SUM({get_column_letter(j)}2:{get_column_letter(j)}{end_row})"
-                             for j in range(2, len(months) + 3)] + [""]
+                             for j in range(2, len(months) + 3)] + ["", f"=SUM({l3col}2:{l3col}{end_row})"]
     wk.append(total_row)
     for row in wk.iter_rows(min_row=2, max_row=end_row + 1):
         for c in row[1:len(months) + 2]:
             c.number_format = INR
-        row[-1].number_format = "0%"
+        row[-2].number_format = "0%"
+        row[-1].number_format = INR
     for c in wk[end_row + 1]:
         c.font = Font(bold=True)
 

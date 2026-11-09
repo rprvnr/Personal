@@ -118,8 +118,7 @@ rule(r"AGODA|MAKEMYTRIP|REDBUS|CONFIRM TICKET|ALLBEST TRAVELS|MANGALORE CONSOLID
      "Travel & stays")
 rule(r"EKAYARS", "Ekayars (fuel)", "Transport & fuel")
 rule(r"A ?J SERVICE STATION", "AJ Service Station (fuel)", "Transport & fuel")
-rule(r"ABT LTD", "ABT Ltd, Kanchipuram", "Other spending", True,
-     "Large one-off purchase. Pick the right category.")
+rule(r"ABT LTD", "ABT Ltd (car service)", "Transport & fuel", False, "Car servicing.")
 rule(r"ROPPEN|RAPIDO|PARKI|ADANI|SERVICE STATION|PETROL|FUEL|EKAYARS", None, "Transport & fuel")
 
 # ---- bills / subscriptions ----
