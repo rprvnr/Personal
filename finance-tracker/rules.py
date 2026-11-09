@@ -13,7 +13,7 @@ CATEGORIES = {
     "From Dad": "income",
     "Other income": "income",
     "Rent": "spend",
-    "Household (with Lakshana)": "spend",
+    "Household (shared)": "spend",
     "Food delivery": "spend",
     "Groceries & quick commerce": "spend",
     "Dining out": "spend",
@@ -52,26 +52,29 @@ def rule(pattern, merchant, category, review=False, note=""):
     R.append((re.compile(pattern), merchant, category, review, note))
 
 
+# Personal rules (people, employer, landlord, own account handles) live in the private data
+# folder, not in this file: personal_rules.csv with columns pattern,merchant,category,dir,review,note.
+# They're checked before the general rules; dir (in/out) is optional.
+P = []
+
+
+def load_personal_rules(path):
+    import csv
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            P.append((re.compile(row["pattern"]), row["merchant"] or None, row["category"],
+                      row.get("dir") or "", row.get("review", "").lower() == "true", row.get("note", "")))
+
+
 # ---- transfers between own accounts, card bills, family, friends ----
-rule(r"MOB/SELFFT|PRAVEEN ?RAAMANAATHAN|UPI/P2A/.*/PRAVEEN R/|IMPS/MRT/.*918525094643",
-     "Own account", "Own-account transfers")
+rule(r"MOB/SELFFT", "Own account", "Own-account transfers")
 rule(r"HDFC BANK DIGITAL CR", "HDFC credit card bill", "Card bill payments")
 rule(r"CREDITCARD PAYMENT|^MB PAYMENT", "Axis credit card bill", "Card bill payments")
 rule(r"^PAYMENT RECEIVED", "Card bill payment", "Card bill payments")
 rule(r"FUEL SURCHARGE REVERSAL", "Fuel surcharge refund", "Transport & fuel")
-rule(r"TRULIV", "Truliv (rent)", "Rent")
-rule(r"ARULALAN", "Dad", "DAD", False, "")
-rule(r"LAKSHANA", "Lakshana B", "Household (with Lakshana)", False,
-     "Your share of household costs. Money she sends back reduces it.")
-rule(r"JANANI SANKAR", "Dr Janani Sankar", "Health & medical")
-rule(r"KARTHIKEYAN|BHAVANI B|BHAVANA B", None, "Splits with friends", False,
-     "Shared spending: money sent adds to spending, money received back reduces it.")
-rule(r"CASH DEPOSIT", "Cash deposit", "Family transfers", False,
-     "Cash from Dad (plus the 11 Oct Axis withdrawal), part of the October family transfer.")
+rule(r"CASH DEPOSIT", "Cash deposit", "Cash moved between accounts", False, "Cash deposited into the bank.")
 
 # ---- income ----
-rule(r"ZOOMRX.*(MEALS|TRAVEL)", "ZoomRx reimbursement", "Reimbursements")
-rule(r"ZOOMRX", "ZoomRx", "Salary")
 rule(r"INT\.PD|INTEREST PAID", "Bank interest", "Interest & cashback")
 rule(r"FUEL CASHBACK", "Card cashback", "Interest & cashback")
 rule(r"UPIRET", "UPI cashback", "Interest & cashback")
@@ -162,32 +165,29 @@ def clean_merchant(desc):
 
 def categorise(desc, amount, direction, account, date):
     u = desc.upper()
-    merchant = None
-    for pat, m, cat, review, note in R:
-        if pat.search(u):
-            # The 50k Axis ATM withdrawal on 11 Oct was re-deposited into HDFC on 13 Oct.
-            if cat == "Cash withdrawn to wallet" and account.startswith("Axis Savings") and date == "2026-10-11":
-                return {"merchant": "ATM withdrawal", "category": "Cash moved between accounts",
-                        "review": False, "note": "Withdrawn from Axis and deposited into HDFC on 13 Oct."}
-            if cat == "DAD":
-                # Oct 2026 family transfers and the 31 May / 1 Jun round trip net out; skip them.
-                if date >= "2026-10-01" or date in ("2026-05-31", "2026-06-01"):
-                    return {"merchant": "Dad", "category": "Family transfers", "review": False,
-                            "note": "Family transfer with Dad; not counted."}
-                if direction == "in":
-                    return {"merchant": "Dad", "category": "From Dad", "review": False, "note": ""}
-                return {"merchant": "Dad", "category": "Family transfers", "review": True, "note": ""}
-            # Generic Swiggy charges of ₹1,000+ are almost always Dineout restaurant bills; the
-            # statement doesn't say. Food orders and Instamart run smaller.
-            if (m == "Swiggy" and amount >= 1000 and direction == "out"
-                    and not re.search(r"FOOD|PVT LTD FO|INSTAMART|E COM", u)):
-                return {"merchant": "Swiggy Dineout", "category": "Dining out", "review": False,
-                        "note": "Likely a Dineout restaurant bill (₹1,000+ on a generic Swiggy charge)."}
-            if cat == "Salary" and amount > 150000:
-                note = "Much larger than the usual salary; probably a bonus or settlement."
-            # Refunds into a spend category stay in that category and reduce its total.
-            return {"merchant": m or clean_merchant(desc), "category": cat, "review": review,
-                    "note": note}
+    hit = None
+    for pat, m, cat, d, review, note in P:
+        if (not d or d == direction) and pat.search(u):
+            hit = (m, cat, review, note)
+            break
+    if hit is None:
+        for pat, m, cat, review, note in R:
+            if pat.search(u):
+                hit = (m, cat, review, note)
+                break
+    if hit:
+        m, cat, review, note = hit
+        # Generic Swiggy charges of ₹1,000+ are almost always Dineout restaurant bills; the
+        # statement doesn't say. Food orders and Instamart run smaller.
+        if (m == "Swiggy" and amount >= 1000 and direction == "out"
+                and not re.search(r"FOOD|PVT LTD FO|INSTAMART|E COM", u)):
+            return {"merchant": "Swiggy Dineout", "category": "Dining out", "review": True,
+                    "note": "Likely a Dineout restaurant bill (₹1,000+ on a generic Swiggy charge), "
+                            "but no Dineout receipt was found for it."}
+        if cat == "Salary" and amount > 150000:
+            note = "Much larger than the usual salary; probably a bonus or settlement."
+        # Refunds into a spend category stay in that category and reduce its total.
+        return {"merchant": m or clean_merchant(desc), "category": cat, "review": review, "note": note}
     merchant = clean_merchant(desc)
     is_upi_person = bool(re.match(r"UPI-", u)) and "@HDFCBANK" not in u
     if direction == "in":
@@ -204,11 +204,12 @@ def categorise(desc, amount, direction, account, date):
 # ---------------------------------------------------------------------------
 # Subcategories: (category, regex on merchant + narration, subcategory). First match wins.
 # Swiggy descriptors: FOOD / FOOD1 / "PVT LTD FO" are food delivery; INSTAMART / E COM are
-# Instamart. Plain "Swiggy", "Swiggy Limited", CAS*/RAZ* Swiggy can be food, Instamart or
-# Dineout, and the statement doesn't say which.
+# Instamart. Plain "Swiggy", "Swiggy Limited", CAS*/RAZ* Swiggy are food orders or, at ₹1,000+,
+# Dineout bills; Dineout receipts in email confirm specific ones (see overrides.csv).
 SUB_RULES = [
     ("Food delivery", r"SWIGGY.*(FOOD|PVT LTD FO)|BUNDL", "Swiggy food delivery"),
-    ("Food delivery", r"SWIGGY", "Swiggy orders (food or Instamart, unlabelled)"),
+    # Swiggy's order emails show only food deliveries; Instamart charges carry their own label.
+    ("Food delivery", r"SWIGGY", "Swiggy food delivery"),
     ("Food delivery", r"ZOMATO|ETERNAL", "Zomato"),
     ("Food delivery", r"EATCLUB|EAT GOOD", "EatClub"),
     ("Food delivery", r"DOMINO|JUBILANT", "Domino's"),
@@ -232,7 +233,7 @@ SUB_RULES = [
     ("Shopping", r".", "Home & other"),
     ("Health & medical", r"DENTAL", "Dental"),
     ("Health & medical", r"DIAGNOSTIC", "Diagnostics & tests"),
-    ("Health & medical", r"JANANI|SPECIALITY|HOSPITAL", "Doctors & hospitals"),
+    ("Health & medical", r"^DR |SPECIALITY|HOSPITAL", "Doctors & hospitals"),
     ("Health & medical", r".", "Pharmacy & supplements"),
     ("Transport & fuel", r"ABT", "Car service"),
     ("Transport & fuel", r"EKAYARS|SERVICE STATION|FUEL|PETROL", "Fuel"),
@@ -242,10 +243,10 @@ SUB_RULES = [
     ("Travel & stays", r"REDBUS|CONFIRM TICKET|TRAVELS", "Bus & train"),
     ("Subscriptions & apps", r"APPLE", "Apple (iCloud, App Store)"),
     ("Subscriptions & apps", r"YOUTUBE|GOOGLE", "Google & YouTube"),
-    ("Entertainment", r"BOOKMYSHOW|KARTHIKEYAN|BHAVANI", "Event tickets (BookMyShow)"),
-    ("Household (with Lakshana)", r"DENTAL", "Paid for Lakshana: dental"),
-    ("Household (with Lakshana)", r"BOOKMYSHOW", "Her ticket share"),
-    ("Household (with Lakshana)", r".", "Money sent / received"),
+    ("Entertainment", r"BOOKMYSHOW", "Event tickets (BookMyShow)"),
+    ("Household (shared)", r"DENTAL", "Paid on partner's behalf: dental"),
+    ("Household (shared)", r"BOOKMYSHOW", "Ticket share settled via household"),
+    ("Household (shared)", r".", "Money sent / received"),
     ("Splits with friends", r"CASH", "Paid in cash"),
     ("Entertainment", r"PVR", "Movies"),
 ]

@@ -35,3 +35,14 @@ and per-merchant rules), so the workbook can match the edits made on the page.
 - Salary paid on or after the 25th counts toward the next month (it's that month's salary).
 - ATM withdrawals move cash into your wallet and aren't spending; cash you spend is
   added as its own row in `adjustments.csv`.
+
+## Refreshing (dashboard button or the every-3-days schedule)
+
+The dashboard's "Update with latest data" button sends Claude a comment; a scheduled task does
+the same every three days. A refresh restores the private data folder, pulls new statements,
+card/bank alerts and Swiggy Dineout receipts from email into it (`alerts.csv`, `overrides.csv`),
+re-runs `parse.py` (with `SNAPSHOT_OUT` so `snapshot.json` stays current) and `build.py`,
+republishes the page and posts a summary. Alert rows drop out once a statement covers their dates.
+
+Personal rules (names of people, employer, landlord, own account handles) live in the data
+folder's `personal_rules.csv`, not in this repo.

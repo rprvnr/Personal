@@ -114,6 +114,7 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
     </div>
     <div class="row">
       <span class="status" id="status">Loading your edits…</span>
+      <button class="btn" id="refresh" hidden title="Asks Claude to pull new statements, alerts and receipts from your email and rebuild this page">Update with latest data</button>
       <button class="btn primary" id="export" hidden>Download Excel</button>
     </div>
   </header>
@@ -434,6 +435,32 @@ function buildWorkbook() {
   return XLSX.write(wb, { bookType: "xlsx", type: "array" });
 }
 
+// ---------- "Update with latest data": sends Claude a comment that asks for a refresh ----------
+async function setupRefresh() {
+  const btn = document.getElementById("refresh");
+  let comments = null;
+  try { comments = await claude.use("comments"); } catch (e) {}
+  if (!comments || !comments.sendToClaude) return;
+  const check = async () => { try { return await comments.canSendToClaude(); } catch (e) { return "off"; } };
+  const state = await check();
+  if (state === "off" || state === "writers_only") return;
+  btn.hidden = false;
+  btn.disabled = state !== "available";
+  if (state === "no_session") btn.title = "Claude isn't available right now. Try again later.";
+  btn.onclick = async () => {
+    if (await check() !== "available") { setStatus("Claude isn't available right now. Try again later."); return; }
+    btn.disabled = true;
+    try {
+      const anchor = await comments.anchorFor(document.querySelector("h1"));
+      await comments.sendToClaude({ anchor, text: "Please update the Money Tracker with the latest data from my email (statements, card alerts, Swiggy Dineout receipts) and republish it." });
+      setStatus("Update requested. Claude will reply in the comments when it's done.");
+    } catch (e) {
+      setStatus(e && e.code === "consent_required" ? "Allow commenting from this page to request an update." : "Couldn't send the update request. Try again.");
+      btn.disabled = false;
+    }
+  };
+}
+
 // ---------- boot ----------
 document.getElementById("sub").textContent = `${TX.length} transactions · ${monthName(MONTHS[0])} to ${monthName(MONTHS[MONTHS.length - 1])} · ${[...new Set(TX.map(t => t.account))].length} accounts and cards · last updated ${DATA.built}`;
 try { const s = JSON.parse(localStorage.getItem("money-tracker-state") || "null"); if (s) state = { overrides: s.overrides || {}, rules: s.rules || {} }; } catch (e) {}
@@ -443,6 +470,7 @@ render();
 
 (async () => {
   if (!window.claude || !window.claude.use) { setStatus("Saved in this browser only"); return; }
+  setupRefresh();
   const timer = setTimeout(() => setStatus("Saved in this browser only"), 10000);
   try {
     const dl = await claude.use("downloads");

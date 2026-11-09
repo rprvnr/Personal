@@ -29,12 +29,11 @@ def gaps(tx):
         out.append({"title": "HDFC card purchases since 15 Oct come from email alerts.",
                     "detail": "They'll be checked against the statement that arrives around 15–18 Nov. "
                               "Anything HDFC didn't send an alert for will only show up then."})
-    unclear = sum(t["amount"] if t["dir"] == "out" else -t["amount"] for t in tx
-                  if t.get("sub", "").startswith("Swiggy orders (food or Instamart"))
-    if unclear > 0:
-        out.append({"title": f"₹{unclear:,.0f} of small Swiggy charges aren't labelled food or Instamart.",
-                    "detail": "They're counted as food delivery. Generic Swiggy charges of ₹1,000+ are "
-                              "counted as Dineout restaurant bills under Dining out."})
+    unsure = [t for t in tx if t["merchant"] == "Swiggy Dineout" and t.get("review")]
+    if unsure:
+        amounts = ", ".join(f"₹{t['amount']:,.0f} ({t['date'][8:]}/{t['date'][5:7]})" for t in unsure)
+        out.append({"title": f"{len(unsure)} Swiggy charges look like Dineout but have no receipt.",
+                    "detail": f"{amounts}. They're counted under Dining out for now."})
     cash = os.environ.get("CASH_ON_HAND")
     if cash:
         out.append({"title": f"Cash on hand: ₹{float(cash):,.0f}.",
