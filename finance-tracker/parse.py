@@ -8,6 +8,8 @@ Expected files in <data_dir> (raw statements stay outside the repo):
   axis_card_*.xlsx        Axis credit card monthly statement (xlsx export)
   axis_card_unbilled.csv  date,desc,amount,dc  (unbilled rows copied from the card app)
   hdfc_card_unbilled.csv  date,desc,amount,dc  (unbilled rows from HDFC email alerts)
+  overrides.csv           date,match,amount,category,note[,merchant]  (one-off fixes to specific rows)
+  adjustments.csv         date,desc,amount,dir,category,note[,merchant]  (entries no statement shows)
   hdfc_card_*.pdf         HDFC Pixel card statement PDFs; set HDFC_CARD_PASSWORD to open them
 """
 import csv
@@ -22,7 +24,7 @@ from datetime import datetime
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rules import categorise  # noqa: E402
+from rules import CATEGORIES, categorise, subcategory  # noqa: E402
 
 txns = []
 
@@ -146,6 +148,33 @@ def parse_unbilled(path):
             add(row["date"], account, row["desc"], num(row["amount"]), direction, source)
 
 
+def apply_overrides(path):
+    """overrides.csv: date,match,amount,category,note[,merchant] -- one-off fixes for specific rows."""
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            pat = re.compile(row["match"], re.I)
+            hits = [t for t in txns if t["date"] == row["date"] and pat.search(t["desc"])
+                    and (not row["amount"] or abs(t["amount"] - float(row["amount"])) < 0.01)]
+            if not hits:
+                print(f"override matched nothing: {row}", file=sys.stderr)
+            for t in hits:
+                t["category"] = row["category"]
+                t["note"] = row["note"]
+                if row.get("merchant"):
+                    t["merchant"] = row["merchant"]
+                t["review"] = False
+
+
+def add_adjustments(path):
+    """adjustments.csv: date,desc,amount,dir,category,note[,merchant] -- entries no statement shows."""
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            add(row["date"], "Adjustment", row["desc"], num(row["amount"]), row["dir"], "adjustments.csv")
+            t = txns[-1]
+            t.update(merchant=row.get("merchant") or row["desc"], category=row["category"], note=row["note"],
+                     review=False)
+
+
 def main(data_dir, out_path):
     for p in sorted(glob.glob(os.path.join(data_dir, "hdfc_savings_*.xls"))):
         parse_hdfc(p)
@@ -161,8 +190,14 @@ def main(data_dir, out_path):
         unbilled = os.path.join(data_dir, name)
         if os.path.exists(unbilled):
             parse_unbilled(unbilled)
+    if os.path.exists(os.path.join(data_dir, "overrides.csv")):
+        apply_overrides(os.path.join(data_dir, "overrides.csv"))
+    if os.path.exists(os.path.join(data_dir, "adjustments.csv")):
+        add_adjustments(os.path.join(data_dir, "adjustments.csv"))
     for t in txns:
         del t["_base"]
+        assert t["category"] in CATEGORIES, t
+        t["sub"] = subcategory(t["category"], t["merchant"], t["desc"])
     txns.sort(key=lambda t: (t["date"], t["account"], t["desc"]))
     with open(out_path, "w") as f:
         json.dump(txns, f, ensure_ascii=False, indent=0)

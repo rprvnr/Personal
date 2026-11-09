@@ -13,6 +13,7 @@ CATEGORIES = {
     "From Dad": "income",
     "Other income": "income",
     "Rent": "spend",
+    "Household (with Lakshana)": "spend",
     "Food delivery": "spend",
     "Groceries & quick commerce": "spend",
     "Dining out": "spend",
@@ -37,7 +38,8 @@ CATEGORIES = {
     "Own-account transfers": "excluded",
     "Card bill payments": "excluded",
     "Family transfers": "excluded",
-    "Friends: lending & repayments": "excluded",
+    "Lending & money returned": "excluded",
+    "Bought for family (paid back)": "excluded",
     "Cash moved between accounts": "excluded",
 }
 
@@ -58,8 +60,9 @@ rule(r"^PAYMENT RECEIVED", "Card bill payment", "Card bill payments")
 rule(r"FUEL SURCHARGE REVERSAL", "Fuel surcharge refund", "Transport & fuel")
 rule(r"TRULIV", "Truliv (rent)", "Rent")
 rule(r"ARULALAN", "Dad", "DAD", False, "")
-rule(r"LAKSHANA", "Lakshana B", "Friends: lending & repayments", True,
-     "Assumed lending or repayment.")
+rule(r"LAKSHANA", "Lakshana B", "Household (with Lakshana)", False,
+     "Your share of household costs. Money she sends back reduces it.")
+rule(r"JANANI SANKAR", "Dr Janani Sankar", "Health & medical")
 rule(r"KARTHIKEYAN|BHAVANI B|BHAVANA B", None, "Splits with friends", False,
      "Shared spending: money sent adds to spending, money received back reduces it.")
 rule(r"CASH DEPOSIT", "Cash deposit", "Family transfers", False,
@@ -188,3 +191,58 @@ def categorise(desc, amount, direction, account, date):
         return {"merchant": merchant, "category": "Payments to people", "review": True,
                 "note": "UPI payment to a person. Mark it as lending if you'll get it back."}
     return {"merchant": merchant, "category": "Other spending", "review": True, "note": ""}
+
+
+# ---------------------------------------------------------------------------
+# Subcategories: (category, regex on merchant + narration, subcategory). First match wins.
+# Swiggy descriptors: FOOD / FOOD1 / "PVT LTD FO" are food delivery; INSTAMART / E COM are
+# Instamart. Plain "Swiggy", "Swiggy Limited", CAS*/RAZ* Swiggy can be food, Instamart or
+# Dineout, and the statement doesn't say which.
+SUB_RULES = [
+    ("Food delivery", r"SWIGGY.*(FOOD|PVT LTD FO)|BUNDL", "Swiggy food delivery"),
+    ("Food delivery", r"SWIGGY", "Swiggy (food, Instamart or Dineout: unclear)"),
+    ("Food delivery", r"ZOMATO|ETERNAL", "Zomato"),
+    ("Food delivery", r"EATCLUB|EAT GOOD", "EatClub"),
+    ("Food delivery", r"DOMINO|JUBILANT", "Domino's"),
+    ("Groceries & quick commerce", r"ZEPTO", "Zepto"),
+    ("Groceries & quick commerce", r"BLINK", "Blinkit"),
+    ("Groceries & quick commerce", r"INSTAMART|SWIGGY E COM", "Swiggy Instamart"),
+    ("Groceries & quick commerce", r"BIGBASKET|INNOVATIVE RETAIL", "BigBasket"),
+    ("Groceries & quick commerce", r".", "Milk, vegetables & local stores"),
+    ("Dining out", r"DISTRICT", "Restaurants paid via District"),
+    ("Dining out", r"COFFEE|CAFE|STARBUCKS|CHAAYOS|TEA|PEKOE|JUICE|COOL BAR|BUTTER MILK|COZZY|"
+                   r"REFRESHING|CAKES|SWEETS|MITHAI|IBACO|SUBZERO|MAISON", "Cafés, tea, sweets & desserts"),
+    ("Dining out", r"BOARD ROOM|SHEESHA|SHILTON|YAMANAGA", "Bars, pubs & lounges"),
+    ("Dining out", r".", "Restaurants"),
+    ("Shopping", r"FLIPKART|AMAZON|ASSPL|MYNTRA", "Online marketplaces"),
+    ("Shopping", r"LEVIS|JOCKEY|LIFE STYLE|VICTORIA|MARCH TEE|TUCKED IN|BLUETYGA|HIDESIDE|ZIMSON|"
+                 r"SILKS|KHADI|PATTABHIRAMA", "Clothing, shoes & accessories"),
+    ("Shopping", r"VUMMIDI|JEWEL", "Jewellery"),
+    ("Shopping", r"CROSSWORD|RODA", "Books & stationery"),
+    ("Shopping", r"BESTBUY|MOBILE", "Electronics"),
+    ("Shopping", r".", "Home & other"),
+    ("Health & medical", r"DENTAL", "Dental"),
+    ("Health & medical", r"DIAGNOSTIC", "Diagnostics & tests"),
+    ("Health & medical", r"JANANI|SPECIALITY|HOSPITAL", "Doctors & hospitals"),
+    ("Health & medical", r".", "Pharmacy & supplements"),
+    ("Transport & fuel", r"ABT", "Car service"),
+    ("Transport & fuel", r"EKAYARS|SERVICE STATION|FUEL|PETROL", "Fuel"),
+    ("Transport & fuel", r"PARKI", "Parking"),
+    ("Transport & fuel", r".", "Rides & tolls"),
+    ("Travel & stays", r"AGODA|MAKEMYTRIP|HOTEL", "Hotels & bookings"),
+    ("Travel & stays", r"REDBUS|CONFIRM TICKET|TRAVELS", "Bus & train"),
+    ("Subscriptions & apps", r"APPLE", "Apple (iCloud, App Store)"),
+    ("Subscriptions & apps", r"YOUTUBE|GOOGLE", "Google & YouTube"),
+    ("Entertainment", r"BOOKMYSHOW|KARTHIKEYAN|BHAVANI", "Event tickets (BookMyShow)"),
+    ("Entertainment", r"PVR", "Movies"),
+]
+SUB_RULES = [(c, re.compile(p), sub) for c, p, sub in SUB_RULES]
+
+
+def subcategory(category, merchant, desc):
+    text = f"{merchant} {desc}".upper()
+    for c, pat, sub in SUB_RULES:
+        if c == category and pat.search(text):
+            return sub
+    return merchant if category in ("Subscriptions & apps", "Entertainment", "Travel & stays",
+                                    "Personal care", "Education & classes", "Insurance") else ""

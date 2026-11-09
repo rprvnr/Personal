@@ -62,6 +62,13 @@ svg text { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
 .bar .v { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
 .bar .v small { color: var(--muted); display: block; font-size: 11px; }
 .bar.active { background: var(--surface-2); outline: 1px solid var(--muted); }
+.sub { display: grid; grid-template-columns: 170px 1fr 92px; gap: 10px; align-items: center; padding: 0 4px; font-size: 12px; color: var(--muted); }
+.sub .lbl { padding-left: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub .trk { height: 5px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.sub .fill { display: block; height: 100%; border-radius: 999px; background: color-mix(in srgb, var(--spend) 55%, transparent); }
+.sub .v { text-align: right; font-variant-numeric: tabular-nums; }
+.subs { display: grid; gap: 4px; margin: -2px 0 6px; }
+@media (max-width: 860px) { .sub { grid-template-columns: 120px 1fr 80px; } }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .filters input, .filters select { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
 .filters input { flex: 1 1 200px; }
@@ -272,19 +279,32 @@ function barList(elId, entries, color, onClick, activeKey) {
       <span class="lbl" title="${esc(k)}">${esc(k)}</span>
       <span class="trk"><span class="fill" style="display:block;width:${Math.max(0, v / max * 100)}%;background:${color}"></span></span>
       <span class="v">${fmt(v)}<small>${total ? Math.round(v / total * 100) : 0}%${n ? " · " + n + " txns" : ""}</small></span></button>`).join("") || `<span class="muted">Nothing counted in this period.</span>`;
+  if (elId === "cats" && window.__bySub) {
+    el.querySelectorAll(".bar").forEach(b => {
+      const subs = Object.entries(window.__bySub[b.dataset.k] || {}).filter(([k, v]) => k && Math.abs(v) > 0.5).sort((a, c) => c[1] - a[1]);
+      if (subs.length < 2 && !(subs.length === 1 && subs[0][0] !== b.dataset.k && (window.__bySub[b.dataset.k][""] || 0) > 0.5)) return;
+      const smax = Math.max(1, ...subs.map(x => x[1]));
+      const div = document.createElement("div"); div.className = "subs";
+      div.innerHTML = subs.map(([k, v]) => `<div class="sub"><span class="lbl" title="${esc(k)}">${esc(k)}</span><span class="trk"><span class="fill" style="width:${Math.max(0, v / smax * 100)}%"></span></span><span class="v">${fmt(v)}</span></div>`).join("");
+      b.after(div);
+    });
+  }
   if (onClick) el.querySelectorAll(".bar").forEach(b => b.onclick = () => onClick(b.dataset.k));
 }
 
 function renderBreakdowns() {
-  const byCat = {}, byMer = {}, byInc = {};
+  const byCat = {}, byMer = {}, byInc = {}, bySub = {};
   for (const t of TX) {
     if (!inPeriod(t)) continue;
     const e = eff(t);
-    if (e.spend) { (byCat[e.cat] ||= [0, 0]); byCat[e.cat][0] += e.spend; byCat[e.cat][1]++; }
+    if (e.spend) { (byCat[e.cat] ||= [0, 0]); byCat[e.cat][0] += e.spend; byCat[e.cat][1]++;
+      const sub = e.cat === t.category ? (t.sub || "") : "";
+      ((bySub[e.cat] ||= {})[sub] ||= 0); bySub[e.cat][sub] += e.spend; }
     if (e.spend) { (byMer[t.merchant] ||= [0, 0]); byMer[t.merchant][0] += e.spend; byMer[t.merchant][1]++; }
     if (e.income) { (byInc[e.cat] ||= [0, 0]); byInc[e.cat][0] += e.income; byInc[e.cat][1]++; }
   }
   const sorted = o => Object.entries(o).map(([k, [v, n]]) => [k, v, n]).filter(e => Math.abs(e[1]) > 0.5).sort((a, b) => b[1] - a[1]);
+  window.__bySub = bySub;
   barList("cats", sorted(byCat), "var(--spend)", k => { catFilter = catFilter === k ? "" : k; document.getElementById("fcat").value = catFilter; shown = 150; render(); document.getElementById("tbody").scrollIntoView({ behavior: "smooth", block: "start" }); }, catFilter);
   barList("merchants", sorted(byMer).slice(0, 12), "var(--accent)", k => { document.getElementById("q").value = k; shown = 150; renderTable(); });
   barList("incomes", sorted(byInc), "var(--income)");
@@ -333,7 +353,7 @@ function renderTable() {
   document.getElementById("tbody").innerHTML = rows.slice(0, shown).map(([t, e]) => `
     <tr class="${e.inc ? "" : "off"}" data-id="${t.id}">
       <td class="date">${new Date(t.date + "T00:00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
-      <td class="m"><b>${esc(t.merchant)}</b>${t.review && !e.edited ? '<span class="pill review">Review</span>' : ""}${e.edited ? '<span class="pill edited">Edited</span>' : ""}
+      <td class="m"><b>${esc(t.merchant)}</b>${t.sub && e.cat === t.category && t.sub !== t.merchant ? ` <span class="muted" style="font-size:11px">· ${esc(t.sub)}</span>` : ""}${t.review && !e.edited ? '<span class="pill review">Review</span>' : ""}${e.edited ? '<span class="pill edited">Edited</span>' : ""}
         <small title="${esc(t.desc)}">${esc(t.desc)}</small>${t.note ? `<small class="note">${esc(t.note)}</small>` : ""}</td>
       <td class="muted" style="white-space:nowrap">${esc(t.account)}</td>
       <td class="ctl"><select aria-label="Category for ${esc(t.merchant)}" data-act="cat">${catOptions.replace(`value="${esc(e.cat)}"`, `value="${esc(e.cat)}" selected`)}</select>
@@ -393,12 +413,12 @@ async function flush() {
 function buildWorkbook() {
   const wb = XLSX.utils.book_new();
   const tx = TX.map(t => { const e = eff(t); return {
-    Date: t.date, Month: monthName(monthKey(t.date)), Account: t.account, Merchant: t.merchant, Category: e.cat, Group: e.group,
+    Date: t.date, Month: monthName(monthKey(t.date)), Account: t.account, Merchant: t.merchant, Category: e.cat, Subcategory: e.cat === t.category ? (t.sub || "") : "", Group: e.group,
     Direction: t.dir === "in" ? "In" : "Out", Amount: t.amount, Counted: e.inc ? "Yes" : "No",
     "Counted spending": Math.round(e.spend * 100) / 100, "Counted income": Math.round(e.income * 100) / 100,
     Note: t.note || "", Narration: t.desc }; });
   const ws = XLSX.utils.json_to_sheet(tx);
-  ws["!cols"] = [10, 8, 18, 28, 26, 9, 9, 11, 8, 14, 14, 40, 70].map(w => ({ wch: w }));
+  ws["!cols"] = [10, 8, 18, 28, 26, 30, 9, 9, 11, 8, 14, 14, 40, 70].map(w => ({ wch: w }));
   const months = MONTHS.map(m => { const T = totals(t => monthKey(t.date) === m);
     return { Month: monthName(m), Income: Math.round(T.inc), "Of which from Dad": Math.round(T.dad), Spending: Math.round(T.sp), "Left over": Math.round(T.inc - T.sp) }; });
   const all = totals(() => true);

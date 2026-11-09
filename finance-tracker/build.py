@@ -89,8 +89,8 @@ def build_xlsx(tx, out_dir):
     # --- Transactions ---
     wt = wb.create_sheet("Transactions", 0)
     cols = ["Date", "Month", "Account", "Merchant", "Category", "Direction", "Amount", "Count it?",
-            "Group", "Counted spending", "Counted income", "Note", "Narration"]
-    header(wt, cols, [11, 9, 18, 28, 30, 9, 12, 9, 10, 15, 15, 45, 80])
+            "Group", "Counted spending", "Counted income", "Note", "Narration", "Subcategory"]
+    header(wt, cols, [11, 9, 18, 28, 30, 9, 12, 9, 10, 15, 15, 45, 80, 34])
     for i, t in enumerate(tx, start=2):
         wt.append([
             datetime.strptime(t["date"], "%Y-%m-%d"), t["date"][:7], t["account"], t["merchant"], t["category"],
@@ -98,7 +98,7 @@ def build_xlsx(tx, out_dir):
             f'=IFERROR(VLOOKUP(E{i},Categories!$A$2:$B${ncat},2,FALSE),"spend")',
             f'=IF(H{i}="Yes",IF(I{i}="spend",IF(F{i}="Out",G{i},-G{i}),IF(I{i}="excluded",IF(F{i}="Out",G{i},0),0)),0)',
             f'=IF(H{i}="Yes",IF(I{i}="income",IF(F{i}="In",G{i},-G{i}),IF(I{i}="excluded",IF(F{i}="In",G{i},0),0)),0)',
-            t.get("note", ""), t["desc"],
+            t.get("note", ""), t["desc"], t.get("sub", ""),
         ])
         wt.cell(row=i, column=1).number_format = "dd-mmm-yy"
         for col in (7, 10, 11):
@@ -110,8 +110,8 @@ def build_xlsx(tx, out_dir):
     wt.add_data_validation(dv_cat)
     dv_yes.add(f"H2:H{n}")
     dv_cat.add(f"E2:E{n}")
-    wt.conditional_formatting.add(f"A2:M{n}", FormulaRule(formula=[f'$H2="No"'], font=Font(color="9CA3AF")))
-    wt.auto_filter.ref = f"A1:M{n}"
+    wt.conditional_formatting.add(f"A2:N{n}", FormulaRule(formula=[f'$H2="No"'], font=Font(color="9CA3AF")))
+    wt.auto_filter.ref = f"A1:N{n}"
 
     rng = lambda col: f"Transactions!${col}$2:${col}${n}"  # noqa: E731
 
@@ -179,6 +179,27 @@ def build_xlsx(tx, out_dir):
         row[-1].number_format = INR
     for c in wk[end_row + 1]:
         c.font = Font(bold=True)
+
+    # --- Spending by subcategory ---
+    wsub = wb.create_sheet("Spending by subcategory", 2)
+    header(wsub, ["Category", "Subcategory"] + [mlabel[m] for m in months] + ["Total", "Last 3 months, per month"],
+           [28, 40] + [11] * len(months) + [13, 14])
+    pairs = sorted({(t["category"], t.get("sub", "")) for t in tx
+                    if CATEGORIES.get(t["category"]) == "spend" and t.get("sub")})
+    for r, (c, sub) in enumerate(pairs, start=2):
+        row = [c, sub]
+        for m in months:
+            row.append(f'=SUMIFS({rng("J")},{rng("E")},$A{r},{rng("N")},$B{r},{rng("B")},"{m}")')
+        first, lastc = get_column_letter(3), get_column_letter(len(months) + 2)
+        row.append(f"=SUM({first}{r}:{lastc}{r})")
+        a3 = get_column_letter(months.index(l3[0]) + 3)
+        b3 = get_column_letter(months.index(l3[-1]) + 3)
+        row.append(f"=SUM({a3}{r}:{b3}{r})/3")
+        wsub.append(row)
+        for c_ in wsub[r][2:]:
+            c_.number_format = INR
+    wsub.cell(row=len(pairs) + 3, column=1, value="Only categories with a breakdown are listed here; "
+              "the full list is on 'Spending by category'.").font = Font(italic=True, color="6B7280")
 
     # --- Notes ---
     wn = wb.create_sheet("Notes")
