@@ -29,7 +29,7 @@ from datetime import datetime
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rules import CATEGORIES, categorise, load_personal_rules, subcategory  # noqa: E402
+from rules import CATEGORIES, ONE_OFF_MIN, SPEND_TYPES, categorise, load_personal_rules, spend_type, subcategory  # noqa: E402,E501
 
 txns = []
 rows = []          # raw rows read by the statement/alert parsers, before categorising
@@ -306,6 +306,10 @@ def main(data_dir, out_path):
         apply_overrides(os.path.join(data_dir, "overrides.csv"))
     if os.path.exists(os.path.join(data_dir, "adjustments.csv")):
         add_adjustments(os.path.join(data_dir, "adjustments.csv"))
+    big = {t["merchant"] for t in txns if CATEGORIES.get(t["category"]) == "spend" and t["dir"] == "out"
+           and t["amount"] >= ONE_OFF_MIN and t["category"] not in SPEND_TYPES["Fixed"] | SPEND_TYPES["People"]}
+    for t in txns:
+        t["type"] = spend_type(t, big)
     for t in txns:
         del t["_base"]
         assert t["category"] in CATEGORIES, t

@@ -144,6 +144,20 @@ td select { background: var(--surface-2); border: 1px solid var(--line); border-
 
   <section class="tiles" id="tiles"></section>
 
+  <section class="grid2" id="lens">
+    <div class="card">
+      <h2>Spending by type, per month</h2>
+      <div class="bars" id="types"></div>
+      <p class="muted" style="font-size:12px;margin:12px 0 0">Fixed: rent and bills. Everyday: groceries, fuel, medicines, small UPI. Eating out &amp; delivery: Swiggy, Zomato, restaurants, bars. Lifestyle: shopping, outings, classes. One-offs: any single purchase of ₹5,000+. People: household with Lakshana, splits, gifts.</p>
+    </div>
+    <div class="card">
+      <h2>What your salary covers</h2>
+      <div id="salary"></div>
+      <h2 style="margin-top:20px">How the small stuff adds up</h2>
+      <div id="habits"></div>
+    </div>
+  </section>
+
   <section class="card gaps" id="gaps">
     <h2>Notes on the data</h2>
     <ul id="gaplist"></ul>
@@ -444,7 +458,58 @@ function renderNow() {
     (POS.other || []).filter(o => o.type === "cash").map(o => `<tr><td>${esc(o.label)}</td><td>${fmt(o.amount)}</td><td class="muted">you told me</td></tr>`).join("") + "</tbody>";
 }
 
-function render() { renderMonths(); renderTiles(); renderChart(); renderBreakdowns(); renderRules(); renderTable(); }
+const TYPE_ORDER = ["Fixed", "Everyday", "Eating out & delivery", "Lifestyle", "One-offs", "People"];
+const TYPE_OF_CAT = DATA.spendTypes || {};
+const BIG = new Set(TX.filter(t => t.type === "One-offs" && t.dir === "out").map(t => t.merchant));
+function typeOf(t, e) {
+  if (e.cat === t.category) return t.type || "Lifestyle";
+  const base = TYPE_OF_CAT[e.cat] || "Lifestyle";
+  if (base === "Fixed" || base === "People") return base;
+  if ((t.dir === "out" && t.amount >= 5000) || (t.dir === "in" && BIG.has(t.merchant))) return "One-offs";
+  return base;
+}
+function renderLens() {
+  const n = periodMonths().length;
+  const byType = {}; let salary = 0, bonus = 0, small = 0, smallN = 0, wkend = 0, wkday = 0;
+  const food = { "Food delivery": [0, 0], "Groceries & quick commerce": [0, 0], "Dining out": [0, 0] };
+  const days = new Set();
+  for (const t of TX) {
+    if (!inPeriod(t)) continue;
+    const e = eff(t);
+    if (e.cat === "Salary") { if (t.amount > 150000) bonus += e.income; else salary += e.income; }
+    if (!e.spend) continue;
+    const ty = typeOf(t, e);
+    byType[ty] = (byType[ty] || 0) + e.spend;
+    if (t.dir === "out" && t.amount < 1000) { small += t.amount; smallN++; }
+    if (food[e.cat] && t.dir === "out") { food[e.cat][0]++; food[e.cat][1] += t.amount; }
+    const d = new Date(t.date + "T00:00:00").getDay();
+    if (d === 0 || d === 6) wkend += e.spend; else wkday += e.spend;
+  }
+  const first = TX.filter(inPeriod).map(t => t.date).sort()[0], last = TX.filter(inPeriod).map(t => t.date).sort().pop();
+  const span = first ? Math.max(1, Math.round((new Date(last) - new Date(first)) / 864e5) + 1) : 1;
+  const weekends = (() => { let c = 0; for (let d = new Date(first); d <= new Date(last); d.setDate(d.getDate() + 1)) if (d.getDay() === 0 || d.getDay() === 6) c++; return c; })();
+  const entries = TYPE_ORDER.map(k => [k, (byType[k] || 0) / n]);
+  barList("types", entries, "var(--spend)");
+  const base = ((byType["Fixed"] || 0) + (byType["Everyday"] || 0)) / n;
+  const rest = (Object.values(byType).reduce((a, b) => a + b, 0)) / n - base;
+  const sal = salary / n;
+  document.getElementById("salary").innerHTML = `
+    <div class="bar" style="cursor:default"><span class="lbl">Regular salary</span><span class="trk"><span class="fill" style="display:block;width:100%;background:var(--income)"></span></span><span class="v">${fmt(sal)}<small>per month</small></span></div>
+    <div class="bar" style="cursor:default"><span class="lbl">Fixed + everyday</span><span class="trk"><span class="fill" style="display:block;width:${Math.min(100, base / Math.max(sal, base + rest) * 100)}%;background:var(--accent)"></span></span><span class="v">${fmt(base)}<small>${sal ? Math.round(base / sal * 100) : 0}% of salary</small></span></div>
+    <div class="bar" style="cursor:default"><span class="lbl">Everything else</span><span class="trk"><span class="fill" style="display:block;width:${Math.min(100, rest / Math.max(sal, base + rest) * 100)}%;background:var(--spend)"></span></span><span class="v">${fmt(rest)}<small>${sal ? Math.round(rest / sal * 100) : 0}% of salary</small></span></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 0">${sal ? (base + rest > sal ? `You spend ${fmt(base + rest - sal)} a month more than your regular salary.` : `You spend ${fmt(sal - base - rest)} a month less than your regular salary.`) : ""}${bonus ? ` A bonus of ${fmt(bonus)} in this period is left out of the salary line.` : ""}</p>`;
+  const wk = c => (c / span * 7).toFixed(1);
+  document.getElementById("habits").innerHTML = `
+    <div class="rules">
+      <div><span>Purchases under ₹1,000</span><span class="num">${smallN} · ${fmt(small)} · ${(smallN / span).toFixed(1)} a day</span></div>
+      <div><span>Food delivery orders</span><span class="num">${wk(food["Food delivery"][0])}/week · avg ${fmt(food["Food delivery"][1] / Math.max(1, food["Food delivery"][0]))}</span></div>
+      <div><span>Quick-commerce orders</span><span class="num">${wk(food["Groceries & quick commerce"][0])}/week · avg ${fmt(food["Groceries & quick commerce"][1] / Math.max(1, food["Groceries & quick commerce"][0]))}</span></div>
+      <div><span>Meals and drinks out</span><span class="num">${wk(food["Dining out"][0])}/week · avg ${fmt(food["Dining out"][1] / Math.max(1, food["Dining out"][0]))}</span></div>
+      <div><span>Spend per weekend day vs weekday</span><span class="num">${fmt(wkend / Math.max(1, weekends))} vs ${fmt(wkday / Math.max(1, span - weekends))}</span></div>
+    </div>`;
+}
+
+function render() { renderMonths(); renderTiles(); renderLens(); renderChart(); renderBreakdowns(); renderRules(); renderTable(); }
 
 function setStatus(s) { document.getElementById("status").textContent = s; }
 function changed() {

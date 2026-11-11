@@ -31,6 +31,7 @@ CATEGORIES = {
     "Education & classes": "spend",
     "Cash spending": "spend",
     "Small UPI payments": "spend",
+    "Gifts": "spend",
     "Splits with friends": "spend",
     "Payments to people": "spend",
     "Fees & charges": "spend",
@@ -260,3 +261,33 @@ def subcategory(category, merchant, desc):
             return sub
     return merchant if category in ("Subscriptions & apps", "Entertainment", "Travel & stays",
                                     "Personal care", "Education & classes", "Insurance") else ""
+
+
+# ---------------------------------------------------------------------------
+# Spending types: a coarser lens than categories, for "why is spending so high?".
+SPEND_TYPES = {
+    "Fixed": {"Rent", "Subscriptions & apps", "Phone & internet", "Insurance", "Fees & charges"},
+    "Everyday": {"Groceries & quick commerce", "Transport & fuel", "Health & medical", "Small UPI payments",
+                 "Cash spending"},
+    "Eating out & delivery": {"Food delivery", "Dining out", "Alcohol", "Office meals"},
+    "Lifestyle": {"Shopping", "Personal care", "Entertainment", "Travel & stays", "Education & classes",
+                  "Other spending"},
+    "People": {"Household (shared)", "Splits with friends", "Payments to people", "Gifts"},
+}
+ONE_OFF_MIN = 5000   # a single non-fixed, non-people purchase this big is a one-off
+
+
+def spend_type(t, big_merchants):
+    c = t["category"]
+    if CATEGORIES.get(c) != "spend":
+        return ""
+    if c in SPEND_TYPES["Fixed"]:
+        return "Fixed"
+    if c not in SPEND_TYPES["People"] and (
+            (t["dir"] == "out" and t["amount"] >= ONE_OFF_MIN)
+            or (t["dir"] == "in" and t["merchant"] in big_merchants)):   # refunds/shares of a one-off
+        return "One-offs"
+    for name, cats in SPEND_TYPES.items():
+        if c in cats:
+            return name
+    return "Lifestyle"

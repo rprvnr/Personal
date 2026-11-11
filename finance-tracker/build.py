@@ -18,7 +18,7 @@ from openpyxl.styles import Alignment, Font, PatternFill  # noqa: E402
 from openpyxl.utils import get_column_letter  # noqa: E402
 from openpyxl.worksheet.datavalidation import DataValidation  # noqa: E402
 
-from rules import CATEGORIES  # noqa: E402
+from rules import CATEGORIES, SPEND_TYPES  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -54,6 +54,7 @@ def load_positions(tx_path):
 
 def build_html(tx, out_dir, positions):
     payload = {"transactions": tx, "categories": CATEGORIES, "gaps": gaps(tx), "positions": positions,
+               "spendTypes": {c: k for k, cats in SPEND_TYPES.items() for c in cats},
                "built": datetime.now().strftime("%d %b %Y")}
     with open(os.path.join(HERE, "template.html")) as f:
         html = f.read()
