@@ -566,6 +566,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
          (!done && !shopItem ? '<button class="star' + (isToday(t) ? " on" : "") + '" type="button" data-star="' + t.id + '" aria-pressed="' + isToday(t) + '" aria-label="' + (isToday(t) ? "Remove from Today" : "Add to Today") + '">' + (isToday(t) ? STAR : STAR_O) + "</button>" : "") +
          (inToday ? "" : '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button>") + "</div>";
     h += '<div class="actions">';
+    if (!done && !shopItem) h += '<button class="chip" style="--c:var(--next);color:var(--next);border-color:color-mix(in srgb,var(--next) 45%,transparent)" data-snooze="' + t.id + '">Tomorrow \u2192</button>';
     if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
     h += '<button class="chip" data-edit="' + t.id + '">' + (shopItem || done ? "Edit" : "Edit · date · repeat") + "</button>" + '<button class="chip danger" data-del="' + t.id + '">Delete</button>';
     if (!done && !shopItem) {
@@ -922,6 +923,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     }
     if (d.toshop) { var ts = find(d.toshop); if (ts) { var sn1 = snapshot(); ts.sec = "shop"; delete ts.tag; openId = null; showToast("Moved to Shopping: " + ts.text, sn1); changed(); } return; }
     if (d.totask) { var tt = find(d.totask); if (tt) { var sn2 = snapshot(); tt.sec = "next"; tt.tag = "Personal"; openId = null; showToast("Moved to Next: " + tt.text, sn2); changed(); } return; }
+    if (d.snooze) { var z = find(d.snooze); if (z) snoozeTask(z, root.querySelector('.task[data-id="' + z.id + '"]')); return; }
     if (d.move) { var m = find(d.move); if (m) { m.sec = d.to; openId = null; changed(); } return; }
     if (d.del) {
       var snapD = snapshot(), del = find(d.del);
