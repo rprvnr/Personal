@@ -46,6 +46,7 @@ header { display: flex; flex-direction: column; gap: 6px; }
 .date { color: var(--muted); font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
 h1 span { color: var(--accent); }
 .tally b { color: var(--done); font-weight: 700; }
+.dnow { color: var(--ink); font-size: 16px; font-weight: 700; letter-spacing: -.01em; margin-right: 2px; }
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .sync .led { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .sync.ok .led { background: var(--done); opacity: .7; }
@@ -98,8 +99,27 @@ section.collapsed .list { display: none; }
 .list { list-style: none; margin: 0; padding: 2px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: inset 3px 0 0 var(--c); }
 .empty { padding: 12px 14px; color: var(--muted); font-size: 13px; }
 
-.task { transition: opacity .3s, transform .3s; }
+.task { position: relative; transition: opacity .3s, transform .3s; }
 .task.leaving { opacity: 0; transform: translateX(24px); }
+.task.leaving.left { transform: translateX(-24px); }
+.task-main { touch-action: pan-y; }
+/* Swipe: right = done, left = tomorrow */
+.task.swiping { background: var(--bg); }
+.task.swiping .task-main, .task.swipe-back .task-main { position: relative; z-index: 1; background: var(--surface); }
+.task.swipe-back .task-main { transition: transform .2s ease; }
+.task.swiping::before { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 18px; font-size: 13px; font-weight: 700; letter-spacing: .02em; opacity: var(--p, 0); }
+.task.sw-r::before { content: "\2713  Done"; justify-content: flex-start; color: #03140a; background: var(--done); }
+.task.sw-l::before { content: "Tomorrow \2192"; justify-content: flex-end; color: #1d1405; background: var(--next); }
+.task.sw-armed::before { opacity: 1; }
+/* Tick celebration */
+.task.ticking .check { animation: pop .32s ease; }
+@keyframes pop { 40% { transform: scale(1.3); } }
+.spark { position: fixed; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; pointer-events: none; z-index: 30; animation: spark .6s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(.4); opacity: 0; } }
+.qa-hint { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 2px; }
+.qa-hint:empty { display: none; }
+.qa-hint em { font-style: normal; align-self: center; }
+.qa-hint span { background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--ink); }
 .task-main { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; display: flex; align-items: flex-start; gap: 10px; padding: 7px 12px 7px 14px; }
 .check { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--c) 70%, var(--muted)); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 0; color: transparent; transition: background .2s, border-color .2s, transform .15s; }
 .check svg { width: 12px; height: 12px; }
@@ -296,6 +316,56 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     if (t.tag) c.tag = t.tag;
     state.tasks.push(c);
   }
+  /* Quick add: pull dates, repeats and #tags out of the typed text. */
+  var WD = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  var MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  var WDFULL = "(sun|mon|tue|wed|thu|fri|sat)(?:day|sday|nesday|rsday|urday)", WDRE = "(sun|mon|tue|wed|thu|fri|sat)(?:day|sday|nesday|rsday|urday|s|rs|\\.)?";
+  var MONRE = "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:uary|ruary|ch|il|e|y|ust|t|tember|ober|ember|\\.)?";
+  function nextWd(i, skipToday) { var d = new Date(today() + "T12:00:00"), n = (i - d.getDay() + 7) % 7; if (!n && skipToday) n = 7; return addDays(today(), n); }
+  function parseQuick(raw) {
+    var r = { text: raw }, s = " " + raw + " ", m;
+    function cut(re) { var x = s.match(re); if (x) s = s.replace(re, " "); return x; }
+    // #tag (prefix match, e.g. #err -> Errands)
+    m = s.match(/\s#([a-z]+)(?=\s)/i);
+    if (m) { var k = m[1].toLowerCase(), tg = TAGS.filter(function (t) { return t.toLowerCase().indexOf(k) === 0; })[0]; if (tg) { r.tag = tg; s = s.replace(m[0], " "); } }
+    // repeats
+    if ((m = cut(/\s(?:every\s+day|daily)(?=\s)/i))) r.every = 1;
+    else if ((m = cut(/\s(?:every\s+(?:other|2(?:nd)?)\s+week|every\s+2\s+weeks|biweekly|fortnightly)(?=\s)/i))) r.every = 14;
+    else if ((m = cut(/\s(?:every\s+week|weekly)(?=\s)/i))) r.every = 7;
+    else if ((m = cut(/\s(?:every\s+month|monthly)(?=\s)/i))) r.every = 30;
+    else if ((m = cut(/\severy\s+(\d+)\s+(day|week)s?(?=\s)/i))) r.every = +m[1] * (m[2].toLowerCase() === "week" ? 7 : 1);
+    else if ((m = cut(new RegExp("\\severy\\s+" + WDRE + "(?=\\s)", "i")))) { r.every = 7; r.due = nextWd(WD.indexOf(m[1].toLowerCase()), false); }
+    // dates
+    if (!r.due) {
+      var pre = "\\s(?:(?:on|by|due|for)\\s+)?";
+      if ((m = cut(new RegExp(pre + "(?:today|tonight)(?=\\s)", "i")))) r.due = today();
+      else if ((m = cut(new RegExp(pre + "(?:tomorrow|tmrw?|tmw)(?=\\s)", "i")))) r.due = addDays(today(), 1);
+      else if ((m = cut(new RegExp(pre + "next\\s+week(?=\\s)", "i")))) r.due = nextWd(1, true);
+      else if ((m = cut(new RegExp(pre + "(?:this\\s+)?weekend(?=\\s)", "i")))) r.due = nextWd(6, false);
+      else if ((m = cut(/\sin\s+(\d+)\s+(day|week)s?(?=\s)/i))) r.due = addDays(today(), +m[1] * (m[2].toLowerCase() === "week" ? 7 : 1));
+      else if ((m = cut(new RegExp("\\s(?:(?:on|by|due|for)\\s+)?(next\\s+)?" + WDFULL + "(?=\\s)", "i"))) ||
+               (m = cut(new RegExp("\\s(?:(?:on|by|due|for)\\s+|(next)\\s+)" + WDRE + "(?=\\s)", "i"))) ||
+               (m = cut(new RegExp("\\s()" + WDRE + "\\s*$", "i")))) r.due = nextWd(WD.indexOf(m[2].toLowerCase()), !!m[1]);
+      else if ((m = cut(new RegExp(pre + MONRE + "\\s+(\\d{1,2})(?:st|nd|rd|th)?(?=\\s)", "i"))) ||
+               (m = cut(new RegExp(pre + "(\\d{1,2})(?:st|nd|rd|th)?\\s+" + MONRE + "(?=\\s)", "i")))) {
+        var mo = isNaN(+m[1]) ? MON.indexOf(m[1].toLowerCase()) : MON.indexOf(m[2].toLowerCase()), dd = isNaN(+m[1]) ? +m[2] : +m[1];
+        var y = new Date().getFullYear(), dt = new Date(y, mo, dd, 12);
+        if (dt.getDate() === dd) { var key = ymd(dt); if (key < today()) key = ymd(new Date(y + 1, mo, dd, 12)); r.due = key; }
+      }
+    }
+    // a repeat with no date starts its cycle today
+    if (r.every && !r.due) r.due = today();
+    var clean = s.replace(/\s+/g, " ").replace(/\s+([,.;:])/g, "$1").trim().replace(/^[,;:\-–]\s*|\s*[,;:\-–]$/g, "").trim();
+    r.text = clean || raw;
+    return r;
+  }
+  function quickSummary(q) {
+    var out = [];
+    if (q.due) { var td = today(); out.push("📅 " + (q.due === td ? "Today" : q.due === addDays(td, 1) ? "Tomorrow" : new Date(q.due + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))); }
+    if (q.every) out.push("↻ " + (q.every === 1 ? "Daily" : q.every === 7 ? "Weekly" : q.every === 14 ? "Every 2 weeks" : q.every === 30 ? "Monthly" : "Every " + q.every + " days"));
+    if (q.tag) out.push("#" + q.tag);
+    return out;
+  }
   function isWork(t) { return t.tag === "Work"; }
   function visible(t) { if (filter === "daily") return false; if (filter === "all") filter = "personal"; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
   function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
@@ -371,7 +441,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "</button>";
     });
     h += '</div><span class="sync ' + sync.cls + '" id="sync" title="' + esc(sync.text) + '"><span class="led"></span><span id="syncText">' + (sync.cls === "warn" ? esc(sync.text) : "") + "</span></span></div>";
-    h += '<div class="sub"><span>' + esc(dateStr) + tally + "</span>" +
+    h += '<div class="sub"><span><span class="dnow">' + esc(dateStr) + "</span>" + tally + "</span>" +
          (filter === "work" ? '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button>" : "");
     h += "</div></header>";
 
@@ -446,6 +516,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
         PTAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
       }
       h += "</div>";
+      h += '<div class="qa-hint" id="qaHint" aria-live="polite"></div>';
     }
     return h + "</form>";
   }
@@ -520,6 +591,45 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     if (el) el.className = "sync " + cls;
     if (tx) tx.textContent = cls === "warn" ? text : "";
     if (el) el.title = text;
+  }
+
+  /* Completing a task: tick, a small burst, a buzz, then it slides away. */
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function burst(el, big) {
+    if (!el || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var cols = ["--done", "--today", "--accent", "--shop", "--later"], n = big ? 22 : 10, cs = getComputedStyle(document.documentElement);
+    for (var i = 0; i < n; i++) {
+      var p = document.createElement("i"), a = (i / n) * Math.PI * 2 + Math.random() * .5, d = (big ? 60 : 26) + Math.random() * (big ? 50 : 16);
+      p.className = "spark";
+      p.style.cssText = "left:" + cx + "px;top:" + cy + "px;background:" + cs.getPropertyValue(cols[i % cols.length]) + ";--dx:" + (Math.cos(a) * d).toFixed(1) + "px;--dy:" + (Math.sin(a) * d).toFixed(1) + "px";
+      document.body.appendChild(p);
+      setTimeout(p.remove.bind(p), 700);
+    }
+  }
+  function completeTask(t, li, snap, anchor, swiped) {
+    var toShop = t.sec === "shop", td = today();
+    var lastPick = !toShop && t.star === td && state.tasks.filter(function (x) { return x !== t && x.star === td && !isDoneSec(x.sec) && isWork(x) === isWork(t); }).length === 0;
+    if (li) li.classList.add("ticking");
+    burst(anchor || (li && li.querySelector(".check")), lastPick);
+    buzz(lastPick ? [18, 60, 18, 60, 30] : 15);
+    if (li) setTimeout(function () { li.classList.add("leaving"); }, swiped ? 0 : 220);
+    setTimeout(function () {
+      t.from = t.sec; t.sec = toShop ? "bought" : "done"; t.doneAt = td; openId = null; editId = null;
+      if (!toShop) spawnRepeat(t);
+      showToast(lastPick ? "All of today's picks done 🎉" : (toShop ? "Bought: " : "Done: ") + t.text, snap); changed();
+    }, swiped ? 280 : 520);
+  }
+  function snoozeTask(t, li) {
+    var snap = snapshot();
+    buzz(10);
+    if (li) li.classList.add("leaving", "left");
+    setTimeout(function () {
+      t.due = addDays(today(), 1); delete t.star;
+      if (t.sec === "now") t.sec = "next";
+      openId = null; editId = null;
+      showToast("Moved to tomorrow: " + t.text, snap); changed();
+    }, 260);
   }
 
   function showToast(msg, snap) {
@@ -806,14 +916,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
         t.sec = t.from || (t.sec === "bought" ? "shop" : "now"); delete t.from; delete t.doneAt; openId = null;
         showToast("Moved back to " + t.sec.charAt(0).toUpperCase() + t.sec.slice(1), snap); changed(); return;
       }
-      var li = b.closest(".task"); li.classList.add("ticking");
-      setTimeout(function () { li.classList.add("leaving"); }, 220);
-      setTimeout(function () {
-        var toShop = t.sec === "shop";
-        t.from = t.sec; t.sec = toShop ? "bought" : "done"; t.doneAt = today(); openId = null; editId = null;
-        if (!toShop) spawnRepeat(t);
-        showToast((toShop ? "Bought: " : "Done: ") + t.text, snap); changed();
-      }, 520);
+      completeTask(t, b.closest(".task"), snap, b);
       return;
     }
     if (d.toshop) { var ts = find(d.toshop); if (ts) { var sn1 = snapshot(); ts.sec = "shop"; delete ts.tag; openId = null; showToast("Moved to Shopping: " + ts.text, sn1); changed(); } return; }
@@ -833,6 +936,12 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   });
 
   root.addEventListener("mousedown", function (ev) { if (ev.target.closest(".add .chip")) ev.preventDefault(); });
+  root.addEventListener("input", function (ev) {
+    if (ev.target.id !== "addInput") return;
+    var hint = document.getElementById("qaHint"); if (!hint) return;
+    var v = ev.target.value.trim(), q = v ? parseQuick(v) : {}, bits = v ? quickSummary(q) : [];
+    hint.innerHTML = bits.length ? bits.map(function (b) { return "<span>" + esc(b) + "</span>"; }).join("") + (q.text !== v ? "<em>→ " + esc(q.text) + "</em>" : "") : "";
+  });
   root.addEventListener("submit", function (ev) {
     ev.preventDefault();
     var f = ev.target;
@@ -858,10 +967,14 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     }
     var input = document.getElementById("addInput");
     var text = (input.value || "").trim(); if (!text) return;
-    var task = { id: "t" + (state.nextId++), text: text, sec: filter === "shop" ? "shop" : addSec };
-    if (filter !== "shop") task.tag = filter === "work" ? "Work" : (addTag || "Personal");
+    var snapA = snapshot(), q = filter === "shop" ? { text: text } : parseQuick(text), bits = filter === "shop" ? [] : quickSummary(q);
+    var task = { id: "t" + (state.nextId++), text: q.text, sec: filter === "shop" ? "shop" : addSec };
+    if (filter !== "shop") task.tag = q.tag || (filter === "work" ? "Work" : (addTag || "Personal"));
+    if (q.due) { task.due = q.due; if (q.due <= today()) task.sec = "now"; else if (task.sec === "now") task.sec = "next"; }
+    if (q.every) task.every = q.every;
     state.tasks.unshift(task);
     if (collapsed[task.sec]) { collapsed[task.sec] = false; saveCollapsed(); }
+    if (bits.length) showToast("Added to " + task.sec.charAt(0).toUpperCase() + task.sec.slice(1) + " · " + bits.join(" · ") + ((filter === "work") !== (task.tag === "Work") ? " (on " + (task.tag === "Work" ? "Work" : "Personal") + ")" : ""), snapA);
     focusAdd = true; clearAdd = true; changed();
   });
 
@@ -955,6 +1068,51 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   }
   document.addEventListener("pointerup", function () { cancelPress(); if (drag) endDrag(false); });
   document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
+
+  /* Swipe a row: right = done, left = tomorrow. Vertical moves are left to the page scroll. */
+  var swipe = null;
+  root.addEventListener("pointerdown", function (ev) {
+    if (drag || ev.button > 0 || swipe) return;
+    var main = ev.target.closest(".task-main"); if (!main) return;
+    if (ev.target.closest(".grip, .check, .star, input, select, textarea")) return;
+    var li = main.closest(".task");
+    if (!li || li.classList.contains("editing") || li.classList.contains("open") || li.classList.contains("done") || li.classList.contains("ghost")) return;
+    var t = find(li.dataset.id); if (!t || isDoneSec(t.sec)) return;
+    swipe = { li: li, main: main, t: t, x0: ev.clientX, y0: ev.clientY, dx: 0, on: false, pid: ev.pointerId, w: li.offsetWidth, left: t.sec !== "shop" };
+  });
+  document.addEventListener("pointermove", function (ev) {
+    if (!swipe || ev.pointerId !== swipe.pid) return;
+    var dx = ev.clientX - swipe.x0, dy = ev.clientY - swipe.y0;
+    if (!swipe.on) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { swipe = null; return; }
+      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (dx < 0 && !swipe.left) { swipe = null; return; }
+      swipe.on = true; swipe.li.classList.add("swiping");
+      try { swipe.main.setPointerCapture(ev.pointerId); } catch (e) {}
+    }
+    if (dx < 0 && !swipe.left) dx = 0;
+    swipe.dx = dx;
+    var lim = Math.min(110, swipe.w * .32), p = Math.min(1, Math.abs(dx) / lim);
+    swipe.li.classList.toggle("sw-r", dx > 0); swipe.li.classList.toggle("sw-l", dx < 0);
+    var armed = Math.abs(dx) >= lim;
+    if (armed && !swipe.armed) buzz(8);
+    swipe.armed = armed; swipe.li.classList.toggle("sw-armed", armed);
+    swipe.li.style.setProperty("--p", (.35 + p * .65).toFixed(2));
+    swipe.main.style.transform = "translateX(" + dx + "px)";
+  });
+  function endSwipe(cancel) {
+    var s = swipe; swipe = null; if (!s || !s.on) return;
+    suppressClick = true; setTimeout(function () { suppressClick = false; }, 350);
+    if (!cancel && s.armed) {
+      s.main.style.transition = "transform .22s ease"; s.main.style.transform = "translateX(" + (s.dx > 0 ? s.w : -s.w) + "px)";
+      if (s.dx > 0) completeTask(s.t, s.li, snapshot(), s.li.querySelector(".check"), true); else snoozeTask(s.t, s.li);
+      return;
+    }
+    s.li.classList.add("swipe-back"); s.main.style.transform = "";
+    setTimeout(function () { s.li.classList.remove("swiping", "swipe-back", "sw-r", "sw-l", "sw-armed"); }, 220);
+  }
+  document.addEventListener("pointerup", function () { endSwipe(false); });
+  document.addEventListener("pointercancel", function () { endSwipe(true); });
 
 
   render();
