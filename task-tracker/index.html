@@ -103,6 +103,7 @@ section.collapsed .list { display: none; }
 .task.leaving { opacity: 0; transform: translateX(24px); }
 .task.leaving.left { transform: translateX(-24px); }
 .task-main { touch-action: pan-y; }
+.task-text { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* Swipe: right = done, left = tomorrow */
 .task.swiping { background: var(--bg); }
 .task.swiping .task-main, .task.swipe-back .task-main { position: relative; z-index: 1; background: var(--surface); }
@@ -1070,39 +1071,41 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
 
   /* Swipe a row: right = done, left = tomorrow. Vertical moves are left to the page scroll. */
+  /* Touch events drive swipes on phones (pointer events get cancelled inside the app's webview); the mouse uses pointer events. */
   var swipe = null;
-  root.addEventListener("pointerdown", function (ev) {
-    if (drag || ev.button > 0 || swipe) return;
-    var main = ev.target.closest(".task-main"); if (!main) return;
-    if (ev.target.closest(".grip, .check, .star, input, select, textarea")) return;
+  function beginSwipe(target, x, y, id) {
+    if (drag || swipe) return;
+    var main = target.closest && target.closest(".task-main"); if (!main) return;
+    if (target.closest(".grip, .check, .star, input, select, textarea")) return;
     var li = main.closest(".task");
     if (!li || li.classList.contains("editing") || li.classList.contains("open") || li.classList.contains("done") || li.classList.contains("ghost")) return;
     var t = find(li.dataset.id); if (!t || isDoneSec(t.sec)) return;
-    swipe = { li: li, main: main, t: t, x0: ev.clientX, y0: ev.clientY, dx: 0, on: false, pid: ev.pointerId, w: li.offsetWidth, left: t.sec !== "shop" };
-  });
-  document.addEventListener("pointermove", function (ev) {
-    if (!swipe || ev.pointerId !== swipe.pid) return;
-    var dx = ev.clientX - swipe.x0, dy = ev.clientY - swipe.y0;
+    swipe = { li: li, main: main, t: t, x0: x, y0: y, dx: 0, on: false, pid: id, w: li.offsetWidth, left: t.sec !== "shop" };
+  }
+  /* Returns true while the gesture is a horizontal swipe (caller then blocks native scrolling). */
+  function moveSwipe(x, y) {
+    if (!swipe) return false;
+    var dx = x - swipe.x0, dy = y - swipe.y0;
     if (!swipe.on) {
-      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { swipe = null; return; }
-      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-      if (dx < 0 && !swipe.left) { swipe = null; return; }
-      swipe.on = true; swipe.li.classList.add("swiping");
-      try { swipe.main.setPointerCapture(ev.pointerId); } catch (e) {}
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { swipe = null; return false; }
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return false;
+      if (dx < 0 && !swipe.left) { swipe = null; return false; }
+      swipe.on = true; swipe.li.classList.add("swiping"); swipe.x0 = x - (dx > 0 ? 1 : -1); dx = x - swipe.x0;
     }
     if (dx < 0 && !swipe.left) dx = 0;
     swipe.dx = dx;
-    var lim = Math.min(110, swipe.w * .32), p = Math.min(1, Math.abs(dx) / lim);
+    var lim = Math.min(100, swipe.w * .3), p = Math.min(1, Math.abs(dx) / lim);
     swipe.li.classList.toggle("sw-r", dx > 0); swipe.li.classList.toggle("sw-l", dx < 0);
     var armed = Math.abs(dx) >= lim;
     if (armed && !swipe.armed) buzz(8);
     swipe.armed = armed; swipe.li.classList.toggle("sw-armed", armed);
     swipe.li.style.setProperty("--p", (.35 + p * .65).toFixed(2));
     swipe.main.style.transform = "translateX(" + dx + "px)";
-  });
+    return true;
+  }
   function endSwipe(cancel) {
     var s = swipe; swipe = null; if (!s || !s.on) return;
-    suppressClick = true; setTimeout(function () { suppressClick = false; }, 350);
+    suppressClick = true; setTimeout(function () { suppressClick = false; }, 400);
     if (!cancel && s.armed) {
       s.main.style.transition = "transform .22s ease"; s.main.style.transform = "translateX(" + (s.dx > 0 ? s.w : -s.w) + "px)";
       if (s.dx > 0) completeTask(s.t, s.li, snapshot(), s.li.querySelector(".check"), true); else snoozeTask(s.t, s.li);
@@ -1111,8 +1114,26 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     s.li.classList.add("swipe-back"); s.main.style.transform = "";
     setTimeout(function () { s.li.classList.remove("swiping", "swipe-back", "sw-r", "sw-l", "sw-armed"); }, 220);
   }
-  document.addEventListener("pointerup", function () { endSwipe(false); });
-  document.addEventListener("pointercancel", function () { endSwipe(true); });
+  root.addEventListener("touchstart", function (ev) {
+    if (ev.touches.length !== 1) { endSwipe(true); return; }
+    var tc = ev.touches[0]; beginSwipe(ev.target, tc.clientX, tc.clientY, "touch");
+  }, { passive: true });
+  document.addEventListener("touchmove", function (ev) {
+    if (!swipe || swipe.pid !== "touch") return;
+    var tc = ev.touches[0]; if (!tc) return;
+    if (moveSwipe(tc.clientX, tc.clientY) && ev.cancelable) ev.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchend", function () { if (swipe && swipe.pid === "touch") endSwipe(false); });
+  document.addEventListener("touchcancel", function () { if (swipe && swipe.pid === "touch") endSwipe(swipe.armed ? false : true); });
+  root.addEventListener("pointerdown", function (ev) {
+    if (ev.pointerType !== "mouse" || ev.button > 0) return;
+    beginSwipe(ev.target, ev.clientX, ev.clientY, "mouse");
+  });
+  document.addEventListener("pointermove", function (ev) {
+    if (!swipe || swipe.pid !== "mouse") return;
+    if (moveSwipe(ev.clientX, ev.clientY)) { try { swipe.main.setPointerCapture(ev.pointerId); } catch (e) {} }
+  });
+  document.addEventListener("pointerup", function () { if (swipe && swipe.pid === "mouse") endSwipe(false); });
 
 
   render();
