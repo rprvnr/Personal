@@ -16,6 +16,7 @@ Expected files in <data_dir> (raw statements stay outside the repo):
   overrides.csv           date,match,amount,category,note[,merchant]  (one-off fixes to specific rows)
   adjustments.csv         date,desc,amount,dir,category,note[,merchant]  (entries no statement shows)
   hdfc_card_*.pdf         HDFC Pixel card statement PDFs; set HDFC_CARD_PASSWORD to open them
+  axis_card_*.pdf         Axis card statement PDFs (emailed from Nov 2026); set AXIS_CARD_PASSWORD
 """
 import csv
 import glob
@@ -141,6 +142,29 @@ def parse_axis_card(path):
                        due_date)
 
 
+AXIS_PDF_LINE = re.compile(r"^\s*(\d\d/\d\d/\d{4})\s+(.+?)\s{2,}(?:.*?\s{2,})?([\d,]+\.\d\d) (Dr|Cr)\s*$")
+
+
+def parse_axis_card_pdf(path, password):
+    """Axis My Zone card statement PDF (password protected). Uses pdftotext -layout."""
+    import subprocess
+    text = subprocess.run(["pdftotext", "-upw", password, "-layout", path, "-"], capture_output=True,
+                          text=True, check=True).stdout
+    acct = "Axis Card ··1282"
+    m = re.search(r"([\d,]+\.\d\d) Dr\s+([\d,]+\.\d\d) Dr\s+\d\d/\d\d/\d{4} - (\d\d/\d\d/\d{4})\s+(\d\d/\d\d/\d{4})", text)
+    iso = lambda d: datetime.strptime(d, "%d/%m/%Y").date().isoformat()
+    for line in text.splitlines():
+        t = AXIS_PDF_LINE.match(line)
+        if not t:
+            continue
+        date, desc, amt, dc = t.groups()
+        add(iso(date), acct, desc.strip(), num(amt), "in" if dc == "Cr" else "out", os.path.basename(path))
+    if m:
+        end = iso(m[3])
+        coverage[acct] = max(coverage.get(acct, ""), end)
+        note_card_stmt(acct, end, num(m[1]), num(m[2]), iso(m[4]))
+
+
 HDFC_LINE = re.compile(r"^(\d{1,2}) ?([A-Za-z]{3,4}) ?(\d{4}), ?\d\d:\d\d (.*?)(?: \+\d+)? ?(\+?)₹([\d,]+\.\d\d)$")
 
 
@@ -259,6 +283,10 @@ def main(data_dir, out_path):
         parse_axis_savings(p)
     for p in sorted(glob.glob(os.path.join(data_dir, "axis_card_*.xlsx"))):
         parse_axis_card(p)
+    apw = os.environ.get("AXIS_CARD_PASSWORD")
+    for p in sorted(glob.glob(os.path.join(data_dir, "axis_card_*.pdf"))):
+        if apw:
+            parse_axis_card_pdf(p, apw)
     pw = os.environ.get("HDFC_CARD_PASSWORD")
     for p in sorted(glob.glob(os.path.join(data_dir, "hdfc_card_*.pdf"))):
         if pw:
