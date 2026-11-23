@@ -1,0 +1,1297 @@
+(function () {
+  var SECS = [
+    { key: "now",   label: "Now",   hint: "this week",       c: "var(--now)" },
+    { key: "next",  label: "Next",  hint: "next few weeks",  c: "var(--next)" },
+    { key: "later", label: "Later", hint: "no rush",         c: "var(--later)" },
+    { key: "done",  label: "Done",  hint: "",                c: "var(--done)" },
+    { key: "shop",  label: "To buy", hint: "",               c: "var(--shop)" },
+    { key: "bought", label: "Bought", hint: "",              c: "var(--done)" }
+  ];
+  var TASK_SECS = SECS.slice(0, 4), SHOP_SECS = SECS.slice(4);
+  function isDoneSec(k) { return k === "done" || k === "bought"; }
+  function isShopSec(k) { return k === "shop" || k === "bought"; }
+  var M365 = "Microsoft 365", FLOW = "Wispr Flow";
+  var TAGS = ["Work", "Personal", "Errands", "Home", "Goals"], PTAGS = ["Personal", "Errands", "Home", "Goals"];
+  function tagColor(tg) { return TAGS.indexOf(tg) >= 0 ? "var(--t-" + tg.toLowerCase() + ")" : "var(--muted)"; }
+  var STAR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.55 4.43 1.07 6.27L12 17.13 6.38 20.1l1.07-6.27L2.9 9.4l6.3-.9z"/></svg>';
+  var STAR_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.55 4.43 1.07 6.27L12 17.13 6.38 20.1l1.07-6.27L2.9 9.4l6.3-.9z"/></svg>';
+  var CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+  var CARET = '<svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
+  var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="3.5" r="1.4"/><circle cx="10.5" cy="3.5" r="1.4"/><circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/><circle cx="5.5" cy="12.5" r="1.4"/><circle cx="10.5" cy="12.5" r="1.4"/></svg>';
+  var MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.8" y="3.2" width="12.4" height="9.6" rx="2"/><path d="M2.5 4.5l5.5 4 5.5-4"/></svg>';
+  var SPIN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 2a6 6 0 1 1-6 6"/></svg>';
+  var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+
+  var FLAG = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3.2 1.8a.8.8 0 0 1 .8.8v.3h8.3a.6.6 0 0 1 .5.9l-1.6 2.7 1.6 2.7a.6.6 0 0 1-.5.9H4v4.5a.8.8 0 0 1-1.6 0V2.6a.8.8 0 0 1 .8-.8z"/></svg>';
+  var MORE = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="12.5" cy="8" r="1.4"/></svg>';
+  var UI = window.TASKS_UI || "classic";
+
+  /* Work projects: each has a name and a colour slot (0-7). */
+  var PCOLORS = ["#7fb2ff", "#ffb07a", "#6fd6c8", "#e7a3f0", "#f2c46d", "#b8d97a", "#ff8a8a", "#9b8cff"];
+  var SEED_PROJECTS = [
+    ["Takeda", /takeda/i], ["BPM ATU", /\bbpm\b|\batu\b|ayvakit/i], ["Galen", /galen/i], ["MSF", /\bmsf\b/i],
+    ["Sanofi", /sanofi|\bsan\b/i], ["BMS", /\bbms\b/i], ["Alexion", /alexion/i], ["BLENREP", /blenrep/i],
+    ["AI & tools", /claude|chatgpt|\bai\b/i], ["Admin", /timesheet|apply (?:for )?leave|leave (?:request|application)|ae training|\bidp\b|darwinbox|infrastructure|spi ticket/i]
+  ];
+  function ensureProjects() {
+    if (!state.projects) state.projects = [];
+    if (state.projMigrated) return;
+    state.projMigrated = true;
+    SEED_PROJECTS.forEach(function (p, i) {
+      var used = state.tasks.some(function (t) { return t.tag === "Work" && !isDoneSec(t.sec) && p[1].test(t.text); });
+      if (!used || state.projects.some(function (x) { return x.name === p[0]; })) return;
+      state.projects.push({ id: "p" + (state.nextId++), name: p[0], color: state.projects.length % PCOLORS.length });
+    });
+    state.tasks.forEach(function (t) {
+      if (t.tag !== "Work" || t.proj) return;
+      for (var i = 0; i < SEED_PROJECTS.length; i++) if (SEED_PROJECTS[i][1].test(t.text)) {
+        var pr = state.projects.filter(function (x) { return x.name === SEED_PROJECTS[i][0]; })[0];
+        if (pr) { t.proj = pr.id; break; }
+      }
+    });
+  }
+  function findP(id) { for (var i = 0; i < (state.projects || []).length; i++) if (state.projects[i].id === id) return state.projects[i]; return null; }
+  function pColor(p) { return p ? PCOLORS[(p.color || 0) % PCOLORS.length] : "var(--muted)"; }
+  function projByPrefix(k) {
+    k = k.toLowerCase().replace(/[^a-z0-9]/g, ""); if (!k) return null;
+    var ps = state.projects || [];
+    return ps.filter(function (p) { return p.name.toLowerCase().replace(/[^a-z0-9]/g, "") === k; })[0] ||
+           ps.filter(function (p) { return p.name.toLowerCase().replace(/[^a-z0-9]/g, "").indexOf(k) === 0; })[0] || null;
+  }
+  function fixState() {
+    if (!state.tasks) state.tasks = [];
+    if (!state.inbox) state.inbox = { lastScan: null, items: [] };
+    if (!state.inbox.items) state.inbox.items = [];
+    if (!state.inbox.dismissed) state.inbox.dismissed = [];
+    if (!state.inbox.seen) state.inbox.seen = {};
+    if (!state.routines) state.routines = [];
+    if (!state.log) state.log = {};
+    ensureProjects();
+  }
+
+  var state = JSON.parse(document.getElementById("state").textContent);
+  fixState();
+  var dayOffset = 0, openR = null, editR = null, openP = null;
+  var addDue = null, addProj = null, addPri = false;
+  var root = document.getElementById("root");
+  var addSec = "now", addTag = null, openId = null, editId = null;
+  var artifact = null, canSave = null, saveTimer = null;
+  var sync = { cls: "busy", text: "Connecting" };
+  var undoSnap = null, toastTimer = null;
+  var scanning = false, scanNote = null, scanWarn = false;
+
+  function lsGet(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var collapsed = lsGet("tasks-collapsed-v2", { bought: true });
+  var showOlderDone = false;
+  var filter = lsGet("tasks-filter", "personal");
+  if (filter === "all") filter = "personal";
+  var workMode = lsGet("tasks-workmode", "time");
+  var addOpen = false, suppressClick = false;
+  function saveCollapsed() { lsSet("tasks-collapsed-v2", collapsed); }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function ymd(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function today() { return ymd(new Date()); }
+  function weekAgo() { var d = new Date(); d.setDate(d.getDate() - 6); return ymd(d); }
+  function fmtDate(iso) { if (!iso) return ""; return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
+  function ago(iso) {
+    if (!iso) return "never";
+    var m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 1) return "just now"; if (m < 60) return m + " min ago";
+    var h = Math.round(m / 60); if (h < 24) return h + " h ago";
+    return Math.round(h / 24) + " d ago";
+  }
+  function find(id) { for (var i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === id) return state.tasks[i]; return null; }
+  function snapshot() { return JSON.stringify(state); }
+  function addDays(key, n) { var d = new Date(key + "T12:00:00"); d.setDate(d.getDate() + n); return ymd(d); }
+  function daysBetween(a, b) { return Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000); }
+  function isToday(t) { return t.star === today(); }
+  var REPEATS = [[0, "Doesn't repeat"], [7, "Every week"], [14, "Every 2 weeks"], [30, "Every month"]];
+  /* Keep derived fields honest: dated tasks jump to Now on their day; Now remembers since when (for "stuck"). */
+  function normalize() {
+    var td = today();
+    state.tasks.forEach(function (t) {
+      if (t.due && t.due <= td && (t.sec === "next" || t.sec === "later")) t.sec = "now";
+      if (t.sec === "now") { if (!t.nowSince) t.nowSince = td; } else if (t.nowSince) delete t.nowSince;
+      if (t.star && t.star !== td) delete t.star;
+      if (t.proj && !findP(t.proj)) delete t.proj;
+      if (t.tag !== "Work") { delete t.proj; delete t.pri; }
+    });
+  }
+  /* Work timeline: when is it due? Dated tasks go by date; undated ones by Now / Next / Later. */
+  function endOfWeek() { var d = new Date(today() + "T12:00:00"); return addDays(today(), (7 - d.getDay()) % 7); }
+  var WBUCKETS = [
+    { key: "w:overdue", b: "overdue", label: "Overdue",   c: "var(--danger)" },
+    { key: "w:today",   b: "today",   label: "Today",     c: "var(--now)" },
+    { key: "w:week",    b: "week",    label: "This week", c: "var(--next)" },
+    { key: "w:soon",    b: "soon",    label: "Coming up", c: "var(--later)" },
+    { key: "w:later",   b: "later",   label: "Later",     c: "var(--muted)" }
+  ];
+  function bucketOf(t) {
+    var td = today(), ew = endOfWeek();
+    if (t.due) {
+      if (t.due < td) return "overdue";
+      if (t.due === td) return "today";
+      if (t.due <= ew) return "week";
+      if (t.due <= addDays(ew, 14)) return "soon";
+      return "later";
+    }
+    return t.sec === "now" ? "week" : t.sec === "next" ? "soon" : "later";
+  }
+  function bucketHint(b) {
+    if (b === "week") return "by " + new Date(endOfWeek() + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+    if (b === "soon") return "next 2 weeks";
+    return "";
+  }
+  /* Moving a work task into a bucket rewrites its date only when the old one no longer fits. */
+  function moveToBucket(t, b) {
+    var td = today();
+    if (b === "overdue") return false;
+    if (b === "today") { t.due = td; t.sec = "now"; return true; }
+    if (t.due && bucketOf(t) !== b) delete t.due;
+    t.sec = b === "week" ? "now" : b === "soon" ? "next" : "later";
+    return true;
+  }
+  function workSort(list) {
+    var order = {}; state.tasks.forEach(function (t, i) { order[t.id] = i; });
+    return list.slice().sort(function (a, b) {
+      var pa = a.pri === "high" ? 0 : 1, pb = b.pri === "high" ? 0 : 1; if (pa !== pb) return pa - pb;
+      if (a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
+      if (!!a.due !== !!b.due) return a.due ? -1 : 1;
+      return order[a.id] - order[b.id];
+    });
+  }
+  function relDue(iso) {
+    var td = today(), n = daysBetween(td, iso);
+    if (n === 0) return "Today"; if (n === 1) return "Tomorrow"; if (n === -1) return "Yesterday";
+    if (n < 0) return -n + "d overdue";
+    if (n < 7) return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" });
+    return fmtDate(iso);
+  }
+  function spawnRepeat(t) {
+    if (!t.every) return;
+    var c = { id: "t" + (state.nextId++), text: t.text, sec: "later", every: t.every, due: addDays(today(), t.every) };
+    if (t.tag) c.tag = t.tag;
+    if (t.proj) c.proj = t.proj;
+    if (t.pri) c.pri = t.pri;
+    state.tasks.push(c);
+  }
+  /* Quick add: pull dates, repeats and #tags out of the typed text. */
+  var WD = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  var MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  var WDFULL = "(sun|mon|tue|wed|thu|fri|sat)(?:day|sday|nesday|rsday|urday)", WDRE = "(sun|mon|tue|wed|thu|fri|sat)(?:day|sday|nesday|rsday|urday|s|rs|\\.)?";
+  var MONRE = "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:uary|ruary|ch|il|e|y|ust|t|tember|ober|ember|\\.)?";
+  function nextWd(i, skipToday) { var d = new Date(today() + "T12:00:00"), n = (i - d.getDay() + 7) % 7; if (!n && skipToday) n = 7; return addDays(today(), n); }
+  function parseQuick(raw) {
+    var r = { text: raw }, s = " " + raw + " ", m;
+    function cut(re) { var x = s.match(re); if (x) s = s.replace(re, " "); return x; }
+    // #tag (prefix match, e.g. #err -> Errands)
+    m = s.match(/\s#([a-z]+)(?=\s)/i);
+    if (m) { var k = m[1].toLowerCase(), tg = TAGS.filter(function (t) { return t.toLowerCase().indexOf(k) === 0; })[0]; if (tg) { r.tag = tg; s = s.replace(m[0], " "); } }
+    // @project (prefix match, e.g. @tak -> Takeda) makes it a work task
+    m = s.match(/\s@([a-z0-9&][\w&-]*)(?=\s)/i);
+    if (m) { var pj = projByPrefix(m[1]); if (pj) { r.proj = pj.id; r.tag = "Work"; s = s.replace(m[0], " "); } }
+    // ! or !! or "urgent" / "asap" = high priority
+    if ((m = cut(/\s(?:!{1,3}|urgent|asap)(?=\s)/i))) r.pri = "high";
+    // repeats
+    if ((m = cut(/\s(?:every\s+day|daily)(?=\s)/i))) r.every = 1;
+    else if ((m = cut(/\s(?:every\s+(?:other|2(?:nd)?)\s+week|every\s+2\s+weeks|biweekly|fortnightly)(?=\s)/i))) r.every = 14;
+    else if ((m = cut(/\s(?:every\s+week|weekly)(?=\s)/i))) r.every = 7;
+    else if ((m = cut(/\s(?:every\s+month|monthly)(?=\s)/i))) r.every = 30;
+    else if ((m = cut(/\severy\s+(\d+)\s+(day|week)s?(?=\s)/i))) r.every = +m[1] * (m[2].toLowerCase() === "week" ? 7 : 1);
+    else if ((m = cut(new RegExp("\\severy\\s+" + WDRE + "(?=\\s)", "i")))) { r.every = 7; r.due = nextWd(WD.indexOf(m[1].toLowerCase()), false); }
+    // dates
+    if (!r.due) {
+      var pre = "\\s(?:(?:on|by|due|for)\\s+)?";
+      if ((m = cut(new RegExp(pre + "(?:today|tonight)(?=\\s)", "i")))) r.due = today();
+      else if ((m = cut(new RegExp(pre + "(?:tomorrow|tmrw?|tmw)(?=\\s)", "i")))) r.due = addDays(today(), 1);
+      else if ((m = cut(new RegExp(pre + "next\\s+week(?=\\s)", "i")))) r.due = nextWd(1, true);
+      else if ((m = cut(new RegExp(pre + "(?:this\\s+)?weekend(?=\\s)", "i")))) r.due = nextWd(6, false);
+      else if ((m = cut(/\sin\s+(\d+)\s+(day|week)s?(?=\s)/i))) r.due = addDays(today(), +m[1] * (m[2].toLowerCase() === "week" ? 7 : 1));
+      else if ((m = cut(new RegExp("\\s(?:(?:on|by|due|for)\\s+)?(next\\s+)?" + WDFULL + "(?=\\s)", "i"))) ||
+               (m = cut(new RegExp("\\s(?:(?:on|by|due|for)\\s+|(next)\\s+)" + WDRE + "(?=\\s)", "i"))) ||
+               (m = cut(new RegExp("\\s()" + WDRE + "\\s*$", "i")))) r.due = nextWd(WD.indexOf(m[2].toLowerCase()), !!m[1]);
+      else if ((m = cut(new RegExp(pre + MONRE + "\\s+(\\d{1,2})(?:st|nd|rd|th)?(?=\\s)", "i"))) ||
+               (m = cut(new RegExp(pre + "(\\d{1,2})(?:st|nd|rd|th)?\\s+" + MONRE + "(?=\\s)", "i")))) {
+        var mo = isNaN(+m[1]) ? MON.indexOf(m[1].toLowerCase()) : MON.indexOf(m[2].toLowerCase()), dd = isNaN(+m[1]) ? +m[2] : +m[1];
+        var y = new Date().getFullYear(), dt = new Date(y, mo, dd, 12);
+        if (dt.getDate() === dd) { var key = ymd(dt); if (key < today()) key = ymd(new Date(y + 1, mo, dd, 12)); r.due = key; }
+      }
+    }
+    // a repeat with no date starts its cycle today
+    if (r.every && !r.due) r.due = today();
+    var clean = s.replace(/\s+/g, " ").replace(/\s+([,.;:])/g, "$1").trim().replace(/^[,;:\-–]\s*|\s*[,;:\-–]$/g, "").trim();
+    r.text = clean || raw;
+    return r;
+  }
+  function quickSummary(q) {
+    var out = [];
+    if (q.due) { var td = today(); out.push("📅 " + (q.due === td ? "Today" : q.due === addDays(td, 1) ? "Tomorrow" : new Date(q.due + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))); }
+    if (q.every) out.push("↻ " + (q.every === 1 ? "Daily" : q.every === 7 ? "Weekly" : q.every === 14 ? "Every 2 weeks" : q.every === 30 ? "Monthly" : "Every " + q.every + " days"));
+    if (q.tag && !q.proj) out.push("#" + q.tag);
+    if (q.proj) { var pj = findP(q.proj); if (pj) out.push("@" + pj.name); }
+    if (q.pri) out.push("! High");
+    return out;
+  }
+  function isWork(t) { return t.tag === "Work"; }
+  function visible(t) { if (filter === "daily") return false; if (filter === "all") filter = "personal"; if (filter === "shop") return isShopSec(t.sec); if (isShopSec(t.sec)) return false; return filter === "all" || (filter === "work" ? isWork(t) : !isWork(t)); }
+  function safeUrl(u) { return typeof u === "string" && /^https:\/\//.test(u) ? u : ""; }
+
+  /* ---------- Daily routines ---------- */
+  function keyFor(off) { var d = new Date(); d.setDate(d.getDate() + off); return ymd(d); }
+  function rcount(r, key) { return ((state.log[key] || {})[r.id]) || 0; }
+  function rset(r, key, n) {
+    n = Math.max(0, Math.min(r.times, n));
+    var day = state.log[key] || (state.log[key] = {});
+    if (n) day[r.id] = n; else delete day[r.id];
+    if (!Object.keys(day).length) delete state.log[key];
+    var cutoff = keyFor(-120);
+    Object.keys(state.log).forEach(function (k) { if (k < cutoff) delete state.log[k]; });
+  }
+  function findR(id) { for (var i = 0; i < state.routines.length; i++) if (state.routines[i].id === id) return state.routines[i]; return null; }
+  function streak(r) {
+    var off = rcount(r, keyFor(0)) >= r.times ? 0 : -1, n = 0;
+    while (n < 400 && rcount(r, keyFor(off)) >= r.times) { n++; off--; }
+    return n;
+  }
+  function todayDone() { var k = keyFor(0), d = 0; state.routines.forEach(function (r) { if (rcount(r, k) >= r.times) d++; }); return d; }
+  function pipsHtml(r, c) { var h = '<span class="pips" aria-hidden="true">'; for (var i = 0; i < r.times; i++) h += '<span class="pip' + (i < c ? " on" : "") + '"></span>'; return h + "</span>"; }
+
+  function todayStripHtml() {
+    if (!state.routines.length) return "";
+    var k = keyFor(0), h = '<div class="today" role="group" aria-label="Today\'s routines">';
+    state.routines.forEach(function (r) {
+      var c = rcount(r, k);
+      h += '<button type="button" class="rchip' + (c >= r.times ? " full" : "") + '" data-rtap="' + r.id + '" aria-label="' + esc(r.name) + ": " + c + " of " + r.times + '">' + esc(r.name) + pipsHtml(r, c) + "</button>";
+    });
+    return h + "</div>";
+  }
+
+  function dailyHtml() {
+    var k = keyFor(dayOffset), d = new Date(); d.setDate(d.getDate() + dayOffset);
+    var label = dayOffset === 0 ? "Today" : dayOffset === -1 ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "long" });
+    var h = '<div class="daynav"><button type="button" data-day="-1" aria-label="Previous day">‹</button><div><div class="dlabel">' + label + '</div><div class="dsub">' +
+            esc(d.toLocaleDateString(undefined, { month: "short", day: "numeric" })) + "</div></div>" +
+            '<button type="button" data-day="1" aria-label="Next day"' + (dayOffset >= 0 ? " disabled" : "") + ">›</button></div>";
+    h += '<section style="--c:var(--done)"><ul class="list">';
+    if (!state.routines.length) h += '<li class="empty">No routines yet. Add one below.</li>';
+    state.routines.forEach(function (r) {
+      var c = rcount(r, k), sk = streak(r);
+      h += '<li class="routine' + (openR === r.id ? " open" : "") + (editR === r.id ? " editing" : "") + '"><div class="r-main">';
+      h += '<button class="r-name" data-ropen="' + r.id + '">' + esc(r.name) + (r.times > 1 ? ' <span style="color:var(--muted);font-weight:400">×' + r.times + "</span>" : "") + '<span class="r-meta"><span class="week" aria-label="Last 7 days">';
+      for (var i = -6; i <= 0; i++) { var ci = rcount(r, keyFor(i)); h += '<i class="' + (ci >= r.times ? "full" : ci ? "half" : "") + '"></i>'; }
+      h += "</span>" + (sk ? '<span class="streak">' + sk + "-day streak</span>" : "<span>no streak yet</span>") + "</span></button>";
+      h += '<div class="r-dots">';
+      for (var j = 0; j < r.times; j++) h += '<button class="rdot' + (j < c ? " on" : "") + '" data-rdot="' + r.id + '" data-i="' + j + '" aria-label="' + esc(r.name) + " " + (j + 1) + '">' + CHECK + "</button>";
+      h += "</div></div>";
+      h += '<div class="actions"><span class="seg-label">times a day</span>';
+      [1, 2, 3].forEach(function (n) { h += '<button class="chip" style="--c:var(--done)" data-rtimes="' + r.id + '" data-n="' + n + '" aria-pressed="' + (r.times === n) + '">' + n + "</button>"; });
+      h += '<button class="chip" data-redit="' + r.id + '">Rename</button><button class="chip danger" data-rdel="' + r.id + '">Delete</button></div>';
+      h += '<form class="edit" data-rform="' + r.id + '"><input id="redit-' + r.id + '" aria-label="Rename routine" value="' + esc(r.name) + '" enterkeyhint="done"><button class="btn btn-primary" type="submit">Save</button></form></li>';
+    });
+    h += "</ul></section>";
+    h += '<form class="r-add" id="rAdd" autocomplete="off"><input id="rAddInput" type="text" placeholder="Add a routine (e.g. Drink water)" aria-label="New routine" enterkeyhint="done"><button class="btn" type="submit">Add</button></form>';
+    return h;
+  }
+
+  function render() {
+    var dateStr = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    var h = '<header class="bar">';
+    var tally = "";
+    if (loaded && (filter === "personal" || filter === "work")) {
+      var td0 = today(), wk0 = weekAgo(), nT = 0, nW = 0;
+      state.tasks.forEach(function (t) { if (t.sec === "done" && t.doneAt && isWork(t) === (filter === "work")) { if (t.doneAt === td0) nT++; if (t.doneAt >= wk0) nW++; } });
+      tally = '<span class="tally"><span class="sep"> · </span><b>' + nT + "</b> today · <b>" + nW + "</b> this week</span>";
+    }
+    h += '<div class="top"><div class="filter" role="group" aria-label="Show">';
+    [["personal", "Personal"], ["work", "Work"], ["shop", "Shop"], ["daily", "Daily"]].forEach(function (f) {
+      h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "</button>";
+    });
+    h += '</div><span class="sync ' + sync.cls + '" id="sync" title="' + esc(sync.text) + '"><span class="led"></span><span id="syncText">' + (sync.cls === "warn" ? esc(sync.text) : "") + "</span></span>";
+    if (loaded && filter !== "daily") h += '<button type="button" class="hadd" data-addopen="1" aria-label="' + (filter === "shop" ? "Add item" : "Add task") + '">' + PLUS + "</button>";
+    h += "</div></header>";
+    h += '<div class="sub"><span class="dline"><span class="dnow">' + esc(dateStr) + "</span>" + tally + "</span>" +
+         (filter === "work" ? '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button>" : "") + "</div>";
+
+    if (!loaded) { root.innerHTML = h + '<div class="empty" style="text-align:center">Loading…</div>'; return; }
+    if (filter === "daily") {
+      root.innerHTML = h + dailyHtml();
+      if (editR) { var re = document.getElementById("redit-" + editR); if (re) re.focus(); }
+      return;
+    }
+    if (filter === "personal") h += todayStripHtml();
+
+    h += addHtml();
+    if (filter === "work") h += inboxHtml();
+
+    if (filter !== "shop") {
+      var picks = state.tasks.filter(function (t) { return isToday(t) && (filter === "work" ? isWork(t) : !isWork(t)) && !isShopSec(t.sec); });
+      var left = picks.filter(function (t) { return !isDoneSec(t.sec); }).length;
+      if (picks.length) h += '<section data-sec="today" style="--c:var(--today)"><div class="sec-head" style="cursor:default"><span class="pill">★ Today</span>' +
+           '<span class="count">' + (picks.length - left) + " of " + picks.length + "</span></div><ul class=\"list\">";
+      picks.forEach(function (t) { h += taskHtml(t, true); });
+      if (picks.length && !left) h += '<li class="today-done">All done for today. Nice work.</li>';
+      if (picks.length) h += "</ul></section>";
+    }
+
+    if (filter === "work") h += workHtml();
+    else (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) { h += secHtml(s); });
+
+    var oldIn = document.getElementById("addInput"), keep = oldIn ? oldIn.value : "", hadFocus = oldIn && document.activeElement === oldIn;
+    if (!addOpen) h += '<button type="button" class="fab" data-addopen="1" aria-label="' + (filter === "shop" ? "Add item" : "Add task") + '">' + PLUS + "</button>";
+    root.innerHTML = h;
+    var newIn = document.getElementById("addInput");
+    if (newIn && keep && !clearAdd) newIn.value = keep;
+    clearAdd = false;
+    if (newIn && hadFocus) { focusAdd = true; }
+    if (addOpen && focusAdd) { focusAdd = false; var ai = document.getElementById("addInput"); if (ai) { ai.focus(); showHint(ai); } }
+    if (editId) { var ei = document.getElementById("edit-" + editId); if (ei && ei.closest(".task").classList.contains("editing")) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
+    if (openP) { var pi = document.getElementById("pedit-" + openP); if (pi && document.activeElement !== pi) pi.focus(); }
+  }
+
+  /* One task section: Now / Next / Later / Done / To buy / Bought. */
+  function secHtml(s) {
+    var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t) && !isToday(t); });
+    var older = 0;
+    if (s.key === "done" && !showOlderDone) {
+      var wk = weekAgo(), all = items.length;
+      items = items.filter(function (t) { return t.doneAt && t.doneAt >= wk; });
+      older = all - items.length;
+    }
+    var isCol = !!collapsed[s.key], h = "";
+    h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
+    h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
+         (isDoneSec(s.key) ? '<span class="count">' + items.length + "</span>" : "") + "</button>";
+    h += '<ul class="list">';
+    if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Nothing ticked off this week yet." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
+    if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
+    items.forEach(function (t) { h += taskHtml(t); });
+    h += "</ul>";
+    if (older && !isCol) h += '<button class="btn clear" data-older="1">Show ' + older + " older</button>";
+    if (s.key === "bought" && items.length && !isCol) h += '<button class="btn clear" data-clear="bought">Clear bought</button>';
+    return h + "</section>";
+  }
+
+  /* Work: a Timeline (Overdue / Today / This week / Coming up / Later) or Projects view, then Done. */
+  function workHtml() {
+    var open = state.tasks.filter(function (t) { return isWork(t) && !isDoneSec(t.sec) && !isShopSec(t.sec) && !isToday(t); });
+    var h = '<div class="wmode" role="group" aria-label="Group work by">' +
+      '<button type="button" data-wmode="time" aria-pressed="' + (workMode !== "proj") + '">Timeline</button>' +
+      '<button type="button" data-wmode="proj" aria-pressed="' + (workMode === "proj") + '">Projects</button></div>';
+    if (workMode === "proj") {
+      var groups = (state.projects || []).map(function (p) { return { key: "p:" + p.id, p: p, label: p.name, c: pColor(p), items: open.filter(function (t) { return t.proj === p.id; }) }; });
+      var loose = open.filter(function (t) { return !t.proj; });
+      if (loose.length) groups.push({ key: "p:", p: null, label: "No project", c: "var(--muted)", items: loose });
+      groups.forEach(function (g) {
+        var isCol = !!collapsed[g.key], items = workSort(g.items);
+        var nextDue = items.filter(function (t) { return t.due; }).map(function (t) { return t.due; }).sort()[0];
+        var hot = items.filter(function (t) { return t.due && t.due <= today(); }).length;
+        h += '<section data-sec="' + g.key + '" style="--c:' + g.c + '" class="proj' + (isCol ? " collapsed" : "") + '">';
+        h += '<div class="sec-head"><button type="button" class="sec-tog" data-toggle="' + g.key + '" aria-expanded="' + !isCol + '">' + CARET +
+             '<span class="pname"><span class="pdot"></span>' + esc(g.label) + "</span></button>" +
+             (nextDue ? '<span class="hint' + (hot ? " hot" : "") + '">' + (hot ? hot + " due" : "next " + esc(relDue(nextDue))) + "</span>" : "") +
+             '<span class="count">' + items.length + "</span>" +
+             (g.p ? '<button type="button" class="pmore" data-popen="' + g.p.id + '" aria-label="Edit project ' + esc(g.p.name) + '">' + MORE + "</button>" : "") + "</div>";
+        if (g.p && openP === g.p.id) {
+          h += '<form class="pedit" data-pform="' + g.p.id + '"><input id="pedit-' + g.p.id + '" aria-label="Project name" value="' + esc(g.p.name) + '" enterkeyhint="done">' +
+               '<div class="seg">' + PCOLORS.map(function (c, i) { return '<button type="button" class="swatch" style="--c:' + c + '" data-pcolor="' + g.p.id + '" data-n="' + i + '" aria-pressed="' + ((g.p.color || 0) === i) + '" aria-label="Colour ' + (i + 1) + '"></button>'; }).join("") + "</div>" +
+               '<div class="seg"><button class="btn btn-primary" type="submit">Save</button><button type="button" class="chip danger" data-pdel="' + g.p.id + '">Delete project</button></div></form>';
+        }
+        h += '<ul class="list">';
+        if (!items.length) h += '<li class="empty">No open tasks.</li>';
+        items.forEach(function (t) { h += taskHtml(t); });
+        h += "</ul></section>";
+      });
+      h += '<form class="r-add p-add" id="pAdd" autocomplete="off"><input id="pAddInput" type="text" placeholder="New project (e.g. Novartis W2)" aria-label="New project" enterkeyhint="done"><button class="btn" type="submit">Add</button></form>';
+    } else {
+      WBUCKETS.forEach(function (bk) {
+        var items = workSort(open.filter(function (t) { return bucketOf(t) === bk.b; }));
+        if (!items.length && (bk.b === "overdue" || bk.b === "today")) return;
+        var isCol = !!collapsed[bk.key], hint = bucketHint(bk.b);
+        h += '<section data-sec="' + bk.key + '" style="--c:' + bk.c + '" class="' + (isCol ? "collapsed" : "") + '">';
+        h += '<button class="sec-head" data-toggle="' + bk.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + bk.label + "</span>" +
+             (hint ? '<span class="hint">' + esc(hint) + "</span>" : "") + '<span class="count">' + items.length + "</span></button>";
+        h += '<ul class="list">';
+        if (!items.length) h += '<li class="empty">Nothing here. Nice.</li>';
+        items.forEach(function (t) { h += taskHtml(t); });
+        h += "</ul></section>";
+      });
+    }
+    return h + secHtml(SECS[3]);
+  }
+
+  var focusAdd = false, clearAdd = false;
+  /* Work "when" choices in the add box. Each maps to a bucket (and a date where it has one). */
+  var WHEN = [["week", "This week"], ["today", "Today"], ["tom", "Tomorrow"], ["fri", "Fri"], ["mon", "Next Mon"], ["soon", "Coming up"], ["later", "Later"]];
+  function whenToTask(k, task) {
+    if (k === "today") { task.due = today(); task.sec = "now"; }
+    else if (k === "tom") { task.due = addDays(today(), 1); task.sec = "next"; }
+    else if (k === "fri") { task.due = nextWd(5, false); task.sec = task.due === today() ? "now" : "next"; }
+    else if (k === "mon") { task.due = nextWd(1, true); task.sec = "next"; }
+    else if (k === "soon") task.sec = "next";
+    else if (k === "later") task.sec = "later";
+    else task.sec = "now";
+  }
+  function addHtml() {
+    var shop = filter === "shop", work = filter === "work", label = shop ? "Add item" : "Add task";
+    if (!addOpen) return "";
+    var h = '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
+      '<input id="addInput" type="text" placeholder="' + (shop ? "What do you need to buy?" : work ? "What needs doing? Try “deck @takeda fri !”" : "What needs doing?") + '" aria-label="' + label + '" enterkeyhint="done">' +
+      '<button class="btn btn-primary" type="submit">Add</button><button type="button" class="x" data-addclose="1" aria-label="Close">×</button></div>';
+    if (work) {
+      var cur = addDue || "week";
+      h += '<div class="seg" role="group" aria-label="When">';
+      WHEN.forEach(function (w) { h += '<button type="button" class="chip" style="--c:var(--next)" data-adddue="' + w[0] + '" aria-pressed="' + (cur === w[0]) + '">' + w[1] + "</button>"; });
+      h += "</div>";
+      h += '<div class="seg" role="group" aria-label="Project">';
+      h += '<button type="button" class="chip flagchip" style="--c:var(--danger)" data-addpri="1" aria-pressed="' + addPri + '">' + FLAG + "High</button>";
+      h += '<span class="divider" aria-hidden="true"></span>';
+      (state.projects || []).forEach(function (p) { h += '<button type="button" class="chip" style="--c:' + pColor(p) + '" data-addproj="' + p.id + '" aria-pressed="' + (addProj === p.id) + '"><span class="d"></span>' + esc(p.name) + "</button>"; });
+      h += '<button type="button" class="chip" data-newproj="1">+ Project</button>';
+      h += "</div>";
+      h += '<div class="qa-hint" id="qaHint" aria-live="polite"></div>';
+    } else if (!shop) {
+      h += '<div class="seg" role="group" aria-label="Add to">';
+      SECS.slice(0, 3).forEach(function (s) {
+        h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
+      });
+      var curTag = addTag || "Personal";
+      h += '<span class="divider" aria-hidden="true"></span>';
+      PTAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
+      h += "</div>";
+      h += '<div class="qa-hint" id="qaHint" aria-live="polite"></div>';
+    }
+    return h + "</form>";
+  }
+  function showHint(inp) {
+    var hint = document.getElementById("qaHint"); if (!hint || !inp) return;
+    var v = inp.value.trim(), q = v ? parseQuick(v) : {}, bits = v ? quickSummary(q) : [];
+    hint.innerHTML = bits.length ? bits.map(function (b) { return "<span>" + esc(b) + "</span>"; }).join("") + (q.text !== v ? "<em>→ " + esc(q.text) + "</em>" : "") : "";
+  }
+
+  function inboxHtml() {
+    var items = state.inbox.items || [];
+    var note = scanNote || state.inbox.note || null;
+    if (!items.length && !note) return "";
+    var h = '<section class="inbox" style="--c:var(--inbox)"><div class="sec-head" style="cursor:default"><span class="pill">From inbox</span><span class="hint">email · Teams · Wispr Flow</span><span class="count">' + items.length + "</span></div>";
+    h += '<ul class="list">';
+    if (note) h += '<li class="inbox-note' + (scanWarn && scanNote ? " warn" : "") + '">' + esc(note) + "</li>";
+    items.forEach(function (s) {
+      var url = safeUrl(s.link);
+      var sp = s.proj ? findP(s.proj) : null;
+      h += '<li class="sugg"><div class="sugg-text">' + esc(s.text) +
+           (sp ? '<span class="pchip" style="--c:' + pColor(sp) + '"><span class="pdot"></span>' + esc(sp.name) + "</span>" : "") +
+           (s.due ? '<span class="meta' + (s.due <= today() ? " due-today" : "") + '">' + esc(relDue(s.due)) + "</span>" : "") + "</div>" +
+           '<div class="sugg-src"><span>' + esc(s.source) + (s.from ? " · " + esc(s.from) : "") + "</span>" +
+           (s.why ? '<span class="why">' + esc(s.why) + "</span>" : "") +
+           (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Open ↗</a>' : "") + "</div>" +
+           '<div class="seg"><button class="chip" style="--c:var(--now)" data-take="' + s.id + '" data-to="now"><span class="d"></span>' + (s.due ? "Add · " + esc(relDue(s.due)) : "Add · This week") + "</button>" +
+           '<button class="chip" style="--c:var(--later)" data-take="' + s.id + '" data-to="next"><span class="d"></span>Coming up</button>' +
+           '<button class="chip" data-skip="' + s.id + '">Not mine / dismiss</button></div></li>';
+    });
+    h += "</ul>";
+    h += '<div class="inbox-foot"><span>Checked ' + esc(ago(state.inbox.lastScan)) + "</span>" + '<button class="linkbtn" data-skipall="1">' + (items.length ? "Dismiss all" : "Hide") + "</button>" + "</div></section>";
+    return h;
+  }
+
+  function metaHtml(t) {
+    if (isDoneSec(t.sec) || isShopSec(t.sec)) return "";
+    var h = "", td = today();
+    var wk = isWork(t) && filter === "work";
+    if (wk && t.pri === "high") h += '<span class="meta flag" title="High priority">' + FLAG + "</span>";
+    if (t.due) {
+      var cls = t.due < td ? "overdue" : t.due === td ? "due-today" : "";
+      h += '<span class="meta ' + cls + '">' + (wk ? esc(relDue(t.due)) : t.due === td ? "Today" : fmtDate(t.due)) + "</span>";
+    }
+    if (wk && t.proj && workMode !== "proj") { var p = findP(t.proj); if (p) h += '<span class="pchip" style="--c:' + pColor(p) + '"><span class="pdot"></span>' + esc(p.name) + "</span>"; }
+    if (t.every) h += '<span class="meta" title="Repeats">↻</span>';
+    if (t.sec === "now" && t.nowSince) { var age = daysBetween(t.nowSince, td); if (age >= 10) h += '<span class="meta stuck">stuck ' + age + "d</span>"; }
+    return h;
+  }
+
+  function taskHtml(t, inToday) {
+    var done = isDoneSec(t.sec), shopItem = isShopSec(t.sec);
+    var cls = "task" + (done ? " done" : "") + (openId === t.id ? " open" : "") + (editId === t.id ? " editing" : "");
+    var h = '<li class="' + cls + '" data-id="' + t.id + '">';
+    h += '<div class="task-main"><button class="check" data-check="' + t.id + '" aria-label="' + (done ? "Mark not done: " : "Mark done: ") + esc(t.text) + '">' + CHECK + "</button>";
+    h += '<button class="task-text" data-open="' + t.id + '" aria-expanded="' + (openId === t.id) + '">' + esc(t.text) +
+         (filter === "personal" && t.tag && t.tag !== "Personal" ? '<span class="tag" style="--tc:' + tagColor(t.tag) + '">' + esc(t.tag) + "</span>" : "") + metaHtml(t) +
+         (done && t.doneAt ? '<span class="when">' + (shopItem ? "Bought " : "Done ") + fmtDate(t.doneAt) + "</span>" : "") + "</button>" +
+         (!done && !shopItem ? '<button class="star' + (isToday(t) ? " on" : "") + '" type="button" data-star="' + t.id + '" aria-pressed="' + isToday(t) + '" aria-label="' + (isToday(t) ? "Remove from Today" : "Add to Today") + '">' + (isToday(t) ? STAR : STAR_O) + "</button>" : "") +
+         (inToday ? "" : '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button>") + "</div>";
+    h += '<div class="actions">';
+    if (!done && !shopItem) h += '<button class="chip" style="--c:var(--next);color:var(--next);border-color:color-mix(in srgb,var(--next) 45%,transparent)" data-snooze="' + t.id + '">Tomorrow \u2192</button>';
+    var wkT = isWork(t) && filter === "work";
+    if (!done && !shopItem && wkT) WBUCKETS.forEach(function (bk) { if (bk.b !== "overdue" && bk.b !== bucketOf(t)) h += '<button class="chip" style="--c:' + bk.c + '" data-bucket="' + t.id + '" data-to="' + bk.b + '"><span class="d"></span>' + bk.label + "</button>"; });
+    else if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
+    h += '<button class="chip" data-edit="' + t.id + '">' + (shopItem || done ? "Edit" : "Edit · date · repeat") + "</button>" + '<button class="chip danger" data-del="' + t.id + '">Delete</button>';
+    if (!done && !shopItem) {
+      h += '<span style="width:100%"></span>';
+      if (wkT) {
+        h += '<button class="chip flagchip" style="--c:var(--danger)" data-setpri="' + t.id + '" aria-pressed="' + (t.pri === "high") + '">' + FLAG + "High priority</button>";
+        h += '<span style="width:100%"></span>';
+        (state.projects || []).forEach(function (p) { h += '<button class="chip" style="--c:' + pColor(p) + '" data-setproj="' + t.id + '" data-p="' + p.id + '" aria-pressed="' + (t.proj === p.id) + '"><span class="d"></span>' + esc(p.name) + "</button>"; });
+        h += '<span style="width:100%"></span>';
+      }
+      if (filter === "personal") PTAGS.forEach(function (tg) { h += '<button class="chip" style="--c:' + tagColor(tg) + '" data-settag="' + t.id + '" data-tag="' + tg + '" aria-pressed="' + ((t.tag || "Personal") === tg) + '"><span class="d"></span>' + tg + "</button>"; });
+      h += '<button class="chip" data-settag="' + t.id + '" data-tag="' + (isWork(t) ? "Personal" : "Work") + '">→ ' + (isWork(t) ? "Personal" : "Work") + "</button>";
+      h += '<button class="chip" data-toshop="' + t.id + '">→ Shop</button>';
+    }
+    if (t.sec === "shop") h += '<button class="chip" data-totask="' + t.id + '">→ Make it a task</button>';
+    h += "</div>";
+    h += '<form class="edit" data-editform="' + t.id + '"><input type="text" id="edit-' + t.id + '" aria-label="Edit task" value="' + esc(t.text) + '" enterkeyhint="done">';
+    if (!done && !shopItem) {
+      h += '<div class="opts"><input type="date" name="due" aria-label="Date" value="' + esc(t.due || "") + '"><select name="every" aria-label="Repeat">';
+      REPEATS.forEach(function (r) { h += '<option value="' + r[0] + '"' + ((t.every || 0) === r[0] ? " selected" : "") + ">" + r[1] + "</option>"; });
+      h += "</select></div>";
+    }
+    h += '<button class="btn btn-primary" type="submit">Save</button></form>';
+    return h + "</li>";
+  }
+
+  function setSync(cls, text) {
+    sync = { cls: cls, text: text };
+    var el = document.getElementById("sync"), tx = document.getElementById("syncText");
+    if (el) el.className = "sync " + cls;
+    if (tx) tx.textContent = cls === "warn" ? text : "";
+    if (el) el.title = text;
+  }
+
+  /* Completing a task: tick, a small burst, a buzz, then it slides away. */
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function burst(el, big) {
+    if (!el || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    var r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var cols = ["--done", "--today", "--accent", "--shop", "--later"], n = big ? 22 : 10, cs = getComputedStyle(document.documentElement);
+    for (var i = 0; i < n; i++) {
+      var p = document.createElement("i"), a = (i / n) * Math.PI * 2 + Math.random() * .5, d = (big ? 60 : 26) + Math.random() * (big ? 50 : 16);
+      p.className = "spark";
+      p.style.cssText = "left:" + cx + "px;top:" + cy + "px;background:" + cs.getPropertyValue(cols[i % cols.length]) + ";--dx:" + (Math.cos(a) * d).toFixed(1) + "px;--dy:" + (Math.sin(a) * d).toFixed(1) + "px";
+      document.body.appendChild(p);
+      setTimeout(p.remove.bind(p), 700);
+    }
+  }
+  function completeTask(t, li, snap, anchor, swiped) {
+    var toShop = t.sec === "shop", td = today();
+    var lastPick = !toShop && t.star === td && state.tasks.filter(function (x) { return x !== t && x.star === td && !isDoneSec(x.sec) && isWork(x) === isWork(t); }).length === 0;
+    if (li) li.classList.add("ticking");
+    burst(anchor || (li && li.querySelector(".check")), lastPick);
+    buzz(lastPick ? [18, 60, 18, 60, 30] : 15);
+    if (li) setTimeout(function () { li.classList.add("leaving"); }, swiped ? 0 : 220);
+    setTimeout(function () {
+      t.from = t.sec; t.sec = toShop ? "bought" : "done"; t.doneAt = td; openId = null; editId = null;
+      if (!toShop) spawnRepeat(t);
+      showToast(lastPick ? "All of today's picks done 🎉" : (toShop ? "Bought: " : "Done: ") + t.text, snap); changed();
+    }, swiped ? 280 : 520);
+  }
+  function snoozeTask(t, li) {
+    var snap = snapshot();
+    buzz(10);
+    if (li) li.classList.add("leaving", "left");
+    setTimeout(function () {
+      t.due = addDays(today(), 1); delete t.star;
+      if (t.sec === "now") t.sec = "next";
+      openId = null; editId = null;
+      showToast("Moved to tomorrow: " + t.text, snap); changed();
+    }, 260);
+  }
+
+  function showToast(msg, snap) {
+    undoSnap = snap;
+    document.getElementById("toastUndo").style.display = snap ? "" : "none";
+    document.getElementById("toastMsg").textContent = msg;
+    var t = document.getElementById("toast"); t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); undoSnap = null; }, 5000);
+  }
+
+  /* ---------- Saving: one document in the artifact's database. No page reloads; taps apply instantly. ---------- */
+  var dbRef = null, writing = false, dirty = false, loaded = false;
+  function stable(v) {
+    if (Array.isArray(v)) return "[" + v.map(stable).join(",") + "]";
+    if (v && typeof v === "object") return "{" + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ":" + stable(v[k]); }).join(",") + "}";
+    return JSON.stringify(v);
+  }
+  function changed() {
+    normalize();
+    render();
+    if (canSave === false) return;
+    dirty = true;
+    setSync("busy", "Saving");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 250);
+  }
+  function flush(retried) {
+    if (!dbRef) { if (canSave !== null) setSync("warn", "Not saved"); return; }
+    if (writing || !dirty) return;
+    dirty = false; writing = true;
+    var body = JSON.parse(JSON.stringify(state));
+    dbRef.set(body).then(function () {
+      writing = false;
+      if (dirty) flush(); else setSync("ok", "Saved");
+    }).catch(function (e) {
+      writing = false; dirty = true;
+      var c = e && e.code;
+      if (c === "unavailable" && !retried) { setTimeout(function () { flush(true); }, 800 + Math.random() * 800); return; }
+      if (c === "invalid_argument" || c === "revoked" || c === "not_granted") { canSave = false; setSync("warn", "View only"); return; }
+      if (c === "quota_exceeded") { setSync("warn", "Storage full"); return; }
+      setSync("warn", "Couldn't save — tap again");
+    });
+  }
+  function applyRemote(snap) {
+    if (snap.metadata && snap.metadata.hasPendingWrites) return;
+    if (writing || dirty) return;
+    var first = !loaded; loaded = true;
+    if (!snap.exists) { if (first) { fixState(); normalize(); render(); } return; }
+    var incoming = JSON.parse(JSON.stringify(snap.data()));
+    if (!first && stable(incoming) === stable(state)) return;
+    var before = stable(incoming);
+    state = incoming;
+    fixState(); normalize();
+    render();
+    if (stable(state) !== before) changed();
+  }
+
+  /* ---------- Inbox scan: Outlook + Teams via the viewer's Microsoft 365 connector, Claude picks the action items ---------- */
+  /* A text block may hold one JSON object, an array, or several objects back to back. */
+  function parseMulti(text) {
+    try { var o = JSON.parse(text); return Array.isArray(o) ? o : [o]; } catch (e) {}
+    var out = [], depth = 0, inStr = false, bs = false, start = -1;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inStr) { if (bs) bs = false; else if (c === "\\") bs = true; else if (c === '"') inStr = false; continue; }
+      if (c === '"') { inStr = true; continue; }
+      if (c === "{") { if (depth === 0) start = i; depth++; }
+      else if (c === "}" && depth > 0) { depth--; if (depth === 0 && start >= 0) { try { out.push(JSON.parse(text.slice(start, i + 1))); } catch (e) {} start = -1; } }
+    }
+    return out;
+  }
+  function blocks(res) {
+    var objs = [];
+    ((res && res.content) || []).forEach(function (b) { if (b && b.type === "text" && b.text) objs = objs.concat(parseMulti(b.text)); });
+    var p = res && res.payload;
+    if (!objs.length && p) objs = Array.isArray(p) ? p : (p.value || p.messages || p.results || [p]);
+    var msgs = [], next = null;
+    objs.forEach(function (o) {
+      if (!o || typeof o !== "object") return;
+      if (o.nextOffset != null) next = o.nextOffset;
+      if (o.subject !== undefined || o.summary !== undefined) msgs.push(o);
+    });
+    return { msgs: msgs, next: next };
+  }
+  function fetchAll(mcp, tool, input, pages) {
+    var all = [];
+    function page(offset, n) {
+      var inp = JSON.parse(JSON.stringify(input)); if (offset) inp.offset = offset;
+      return call(mcp, tool, inp).then(function (res) {
+        var b = blocks(res); all = all.concat(b.msgs);
+        if (b.next != null && n + 1 < pages && b.msgs.length) return page(b.next, n + 1);
+        return all;
+      });
+    }
+    return page(0, 0);
+  }
+  function mcpMessage(e, name) {
+    name = (e && e.server) || name || M365;
+    var c = e && e.code;
+    if (c === "needs_reauth") return name + " needs reconnecting: claude.ai → Settings → Connectors.";
+    if (c === "server_not_connected" || c === "server_not_found") return "Add the " + name + " connector in claude.ai → Settings → Connectors.";
+    if (c === "selection_required") return "Choose which " + name + " connector this page should use, then scan again.";
+    if (c === "not_in_manifest" || c === "approval_required" || c === "consent_required") return "This page needs your OK to read " + name + ". Tap Scan inbox and allow it.";
+    if (c === "blocked_by_policy") return "Your organization blocks this " + name + " tool here.";
+    if (c === "not_granted" || c === "capability_disabled" || c === "capability_removed") return "Scanning only works when you open this page in Claude (not a public link).";
+    if (c === "server_unavailable" || c === "rate_limited") return name + " didn't answer. Try again in a minute.";
+    return "Couldn't read " + name + (e && e.message ? ": " + e.message : ".");
+  }
+  function call(mcp, tool, input) {
+    return mcp.callTool(M365, tool, input, { cache: false }).catch(function (e) {
+      if (e && e.retryable) return new Promise(function (r) { setTimeout(r, (e.retryAfterMs || 1500) + Math.random() * 800); })
+        .then(function () { return mcp.callTool(M365, tool, input, { cache: false }); });
+      throw e;
+    });
+  }
+
+  /* Wispr Flow: recorded meetings (their "Next Steps") and scratchpad notes since the last scan. */
+  function flowCall(mcp, tool, input) {
+    return mcp.callTool(FLOW, tool, input, { cache: false }).then(function (r) {
+      var p = r && r.payload;
+      if (typeof p === "string") { try { p = JSON.parse(p); } catch (e) { p = null; } }
+      if (!p || typeof p !== "object") { var objs = []; ((r && r.content) || []).forEach(function (b) { if (b && b.type === "text" && b.text) objs = objs.concat(parseMulti(b.text)); }); p = objs[0] || {}; }
+      return p;
+    });
+  }
+  function nextSteps(sum) {
+    var i = sum.search(/#+\s*(Next Steps|Action Items)/i);
+    if (i < 0) return sum.slice(0, 1200);
+    var rest = sum.slice(i), j = rest.slice(3).search(/\n#+\s/);
+    return (j < 0 ? rest : rest.slice(0, j + 3)).slice(0, 1500);
+  }
+  function fetchFlow(mcp, since) {
+    var out = [];
+    return Promise.allSettled([
+      flowCall(mcp, "search_meetings", { since: since, limit: 10 }),
+      flowCall(mcp, "search_scratchpad_notes", { since: since, limit: 10 })
+    ]).then(function (r) {
+      if (r[0].status === "rejected" && r[1].status === "rejected") throw r[0].reason;
+      var meets = r[0].status === "fulfilled" ? (r[0].value.meetings || []) : [];
+      var notes = r[1].status === "fulfilled" ? (r[1].value.notes || []) : [];
+      notes.forEach(function (n) { out.push({ key: "n:" + (n.id || n.title || ""), source: "Wispr note", from: n.title || "Note", subject: "", text: n.content_excerpt || "", link: "", at: n.modified_at || "", kind: "his own dictated note" }); });
+      return Promise.all(meets.slice(0, 6).map(function (mt) {
+        var owner = mt.owner && mt.owner.name, shared = !!mt.shared;
+        return flowCall(mcp, "get_meeting", { meeting_id: mt.id, view_content: { char_limit: 1 } })
+          .then(function (full) { return nextSteps((full && full.summary) || mt.content_excerpt || ""); }, function () { return mt.content_excerpt || ""; })
+          .then(function (txt) {
+            out.push({ key: "m:" + mt.id, source: "Meeting", from: mt.title || "Meeting", subject: "", text: txt, link: mt.share_link || "", at: mt.start || "",
+                       kind: shared ? "meeting notes written by " + (owner || "someone else") + " (not Praveen)" : "his own meeting notes" });
+          });
+      })).then(function () { return out; });
+    });
+  }
+
+  /* ---------- Who is this for? ---------- */
+  var ME = /\b(praveen|raamanaathan|prav)\b/i;
+  var NOT_NAMES = /^(hi|hey|hello|dear|team|all|everyone|folks|guys|both|thanks|thank|ok|okay|sure|yes|no|please|pls|fyi|update|note|good|morning|evening|afternoon|great|done|noted|any|also|just|so|and|the|this|that|we|i|you|re|fw|fwd|meeting|call|reminder|urgent|important|question|quick|heads|attention|action|status|agenda|summary|today|tomorrow|well|right|cool|nice|perfect|awesome|got|alright|hmm|yeah|yep|yup|nope|sorry|apologies|congrats|congratulations|welcome|regards|cheers|kindly|request|hii|hiii|morning|monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i;
+  /* A message that opens "Hi Akash," or "@Akash" or "Akash -" is for Akash. Returns the names it is addressed to, or []. */
+  function addressees(text) {
+    var t = String(text || "").trim(), names = [], m;
+    /* With a greeting ("Hi Akash:") any punctuation counts; a bare first word needs a comma or dash ("Akash, can you…"), so "Reminder: …" is not a name. */
+    var greet = /^(?:hi|hey|hello|dear|thanks|thank you|ok|okay|sure)\s+@?([A-Z][a-zA-Z]+)(?:\s+(?:and|&)\s+@?([A-Z][a-zA-Z]+))?\s*[,:\-–!]/i;
+    var bare = /^@?([A-Z][a-zA-Z]+)(?:\s+(?:and|&)\s+@?([A-Z][a-zA-Z]+))?\s*[,\-–]\s/;
+    if ((m = t.match(greet)) || (m = t.match(bare))) [m[1], m[2]].forEach(function (n) { if (n && !NOT_NAMES.test(n)) names.push(n); });
+    var at = /@([A-Z][a-zA-Z]+)/g;
+    while ((m = at.exec(t))) if (!NOT_NAMES.test(m[1]) && names.indexOf(m[1]) < 0) names.push(m[1]);
+    return names;
+  }
+  function chatKind(id) {
+    id = String(id || "");
+    if (/@unq\.gbl\.spaces$/.test(id) || /^19:[0-9a-f-]{36}_[0-9a-f-]{36}/.test(id)) return "1:1 chat with Praveen";
+    if (/thread\.tacv2/.test(id)) return "team channel";
+    if (/meeting_/.test(id)) return "meeting chat";
+    return "group chat";
+  }
+
+  /* ---------- Have we got this already? ---------- */
+  var STOPW = ("a an the to for of and or with on in at by from my me i is be it its this that up out about re fw fwd please pls kindly " +
+    "can could would will should need needs we us our you your them their his her he she they asap today tomorrow get got do done make check").split(" ");
+  function stem(w) { return w.replace(/(ings|ing|ed|es|s)$/, "").replace(/(.)\1$/, "$1"); }
+  function toks(s) {
+    var out = {};
+    String(s || "").toLowerCase().replace(/[’']/g, "").split(/[^a-z0-9]+/).forEach(function (w) {
+      if (!w || STOPW.indexOf(w) >= 0 || (w.length < 3 && !/\d/.test(w))) return;
+      out[stem(w)] = 1;
+    });
+    return Object.keys(out);
+  }
+  /* Same task if most of the shorter one's key words appear in the other ("Send Kapil the deck" ~ "Deck to Kapil"). */
+  function similar(a, b) {
+    var A = toks(a), B = toks(b); if (!A.length || !B.length) return false;
+    var hit = A.filter(function (w) { return B.indexOf(w) >= 0; }).length, n = Math.min(A.length, B.length);
+    return n <= 2 ? hit >= n : hit / n >= 0.6 && hit >= 2;
+  }
+  function knownTexts() {
+    var cutoff = addDays(today(), -30), out = [];
+    state.tasks.forEach(function (t) { if (isShopSec(t.sec)) return; if (!isDoneSec(t.sec) || (t.doneAt && t.doneAt >= cutoff)) out.push(t.text); });
+    (state.inbox.items || []).forEach(function (s) { out.push(s.text); });
+    (state.inbox.dismissed || []).forEach(function (s) { out.push(s.t); });
+    return out;
+  }
+  function remember(text) {
+    var d = state.inbox.dismissed || (state.inbox.dismissed = []);
+    d.push({ t: String(text).slice(0, 120), at: today() });
+    var cutoff = addDays(today(), -60);
+    state.inbox.dismissed = d.filter(function (x) { return x.at >= cutoff; }).slice(-150);
+  }
+  function hashKey(s) { var h = 5381; s = String(s); for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+
+  function scan() {
+    if (scanning) return;
+    scanning = true; scanNote = "Reading your email, Teams and Wispr Flow…"; scanWarn = false; render();
+    var started = new Date().toISOString();
+    var threeDays = new Date(Date.now() - 3 * 86400000).toISOString();
+    var since = state.inbox.lastScan || threeDays;
+    var sinceFlow = state.inbox.lastScanFlow || threeDays;
+    var mcp, sample, seen = state.inbox.seen || (state.inbox.seen = {});
+    var use = window.claude && window.claude.use;
+    (use ? Promise.all([use("mcp"), use("sample")]) : Promise.reject({ code: "not_granted" })).then(function (r) {
+      mcp = r[0]; sample = r[1];
+      if (!mcp || !sample) throw { code: "not_granted" };
+      return Promise.allSettled([
+        fetchAll(mcp, "outlook_email_search", { query: "*", afterDateTime: since, limit: 25 }, 2),
+        fetchAll(mcp, "chat_message_search", { query: "*", afterDateTime: since, limit: 25 }, 3),
+        fetchFlow(mcp, sinceFlow)
+      ]);
+    }).then(function (res) {
+      var msgs = [], fails = [], counts = [0, 0, 0], skippedOthers = 0;
+      var names = ["email", "Teams", "Wispr Flow"], servers = [M365, M365, FLOW];
+      if (res[0].status === "fulfilled") res[0].value.forEach(function (m) { counts[0]++;
+        msgs.push({ key: "e:" + (m.id || m.internetMessageId || m.subject), source: "Email", from: m.senderName || m.sender || "", subject: m.subject || "", text: m.summary || "", link: m.webLink || "", at: m.receivedDateTime || "", kind: "email" });
+      });
+      if (res[1].status === "fulfilled") res[1].value.forEach(function (m) { counts[1]++;
+        var fromName = (m.from && m.from.displayName) || "", mine = ME.test(fromName);
+        msgs.push({ key: "t:" + (m.id || m.webUrl), source: "Teams", from: mine ? "Praveen (you)" : fromName, mine: mine, subject: m.subject || "", text: m.summary || "",
+                    link: m.webUrl || "", at: m.createdDateTime || "", chat: m.chatId || "", kind: chatKind(m.chatId) });
+      });
+      if (res[2].status === "fulfilled") res[2].value.forEach(function (m) { counts[2]++; msgs.push(m); });
+      res.forEach(function (x, i) { if (x.status !== "fulfilled") fails.push(i); });
+      if (fails.length === 3) throw res[0].reason;
+      var partial = fails.map(function (i) { return " " + names[i] + " couldn't be read: " + mcpMessage(res[i].reason, servers[i]); }).join("");
+      var read = "Read " + [
+        res[0].status === "fulfilled" ? counts[0] + " email" + (counts[0] === 1 ? "" : "s") : "no email",
+        res[1].status === "fulfilled" ? counts[1] + " Teams message" + (counts[1] === 1 ? "" : "s") : "no Teams",
+        res[2].status === "fulfilled" ? counts[2] + " Wispr Flow item" + (counts[2] === 1 ? "" : "s") : "no Wispr Flow"
+      ].join(", ") + ". ";
+      var flowOk = res[2].status === "fulfilled";
+
+      /* Keep each Teams message next to the rest of its conversation, and mark who it is addressed to. */
+      var byChat = {};
+      msgs.forEach(function (m) { if (m.chat) (byChat[m.chat] = byChat[m.chat] || []).push(m); });
+      msgs.forEach(function (m) {
+        var to = m.source === "Teams" || m.source === "Email" ? addressees(m.text) : [];
+        var toOthers = to.filter(function (n) { return !ME.test(n); });
+        m.to = to.some(function (n) { return ME.test(n); }) ? "Praveen" : toOthers.join(", ");
+        m.forOthers = !!toOthers.length && !ME.test(m.text);
+      });
+      /* Already looked at in an earlier scan? Skip. Addressed by name to someone else and Praveen not mentioned? Skip. */
+      var fresh = msgs.filter(function (m) {
+        if (seen[hashKey(m.key)]) return false;
+        if (m.forOthers && !m.mine) { skippedOthers++; return false; }
+        return true;
+      });
+      var markSeen = function () {
+        msgs.forEach(function (m) { seen[hashKey(m.key)] = today(); });
+        var cutoff = addDays(today(), -21);
+        Object.keys(seen).forEach(function (k) { if (seen[k] < cutoff) delete seen[k]; });
+      };
+      if (!fresh.length) return { found: [], msgs: fresh, partial: partial, read: read, flowOk: flowOk, markSeen: markSeen, skippedOthers: skippedOthers };
+
+      var known = knownTexts();
+      var existing = known.slice(0, 200).map(function (t) { return "- " + t; }).join("\n");
+      var projects = (state.projects || []).map(function (p) { return p.name; }).join(", ");
+      var order = [], seenChat = {};
+      fresh.forEach(function (m, i) { m.i = i; });
+      fresh.forEach(function (m) {
+        if (m.chat) { if (seenChat[m.chat]) return; seenChat[m.chat] = 1; order.push({ head: "Teams " + m.kind, items: byChat[m.chat].filter(function (x) { return fresh.indexOf(x) >= 0; }) }); }
+        else order.push({ head: null, items: [m] });
+      });
+      var list = order.map(function (g) {
+        var lines = g.items.slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).map(function (m) {
+          return "[" + m.i + "] " + m.source + " (" + m.kind + ")" + (m.source === "Meeting" ? ": " : " from ") + (m.from || "unknown") +
+            (m.to ? " | addressed to: " + m.to : "") + (m.subject ? " | subject: " + m.subject : "") + (m.at ? " | " + String(m.at).slice(0, 10) : "") + " | " +
+            m.text.replace(/\s+/g, " ").slice(0, m.source === "Meeting" ? 1500 : 350);
+        });
+        return (g.head ? "--- " + g.head + " ---\n" : "") + lines.join("\n");
+      }).join("\n");
+      var prompt = "You help Praveen Raamanaathan (Senior Associate at ZoomRx, a pharma market-research company) keep his work to-do list. Today is " + today() + ".\n" +
+        "Below are his recent emails, Microsoft Teams messages (grouped by conversation, oldest first) and Wispr Flow items. Pick out ONLY concrete action items that Praveen HIMSELF must do.\n\n" +
+        "Who it is for — be strict:\n" +
+        "- Include: a request made directly to Praveen (1:1 chat, his name, 'you' in a 1:1 chat, an email clearly asking him), something he promised to do in his own message ('Praveen (you)'), a deadline that is on him, or a to-do in his own dictated note or his own meeting notes owned by him.\n" +
+        "- Exclude anything addressed to or owned by someone else: 'Hi Akash, …', '@Rokesh please…', another person replying 'Sure, will do', meeting next steps with another owner in parentheses, notes written by someone else unless they name Praveen as the owner.\n" +
+        "- In group chats and channels, 'you'/'team'/'can someone' is NOT Praveen unless the conversation shows the question was put to him or he took it on.\n" +
+        "- Exclude newsletters, notifications that need nothing, greetings, FYIs, and other people's status updates.\n" +
+        "- When unsure whether it is his, leave it out.\n\n" +
+        "Duplicates — be strict: his list below already has these tasks, including ones he typed in himself in his own words and ones he finished or dismissed. If an item is the same piece of work as anything on the list, even worded differently or only part of it, leave it out. Merge repeated reminders about the same thing into one item.\n\n" +
+        "His projects: " + (projects || "(none)") + ".\n\n" +
+        "His list (open, recently done, and dismissed):\n" + (existing || "(empty)") + "\n\nItems:\n" + list + "\n\n" +
+        'Reply with JSON only: an array (at most 10) of {"text": short imperative task, max 70 characters, "ref": index of the main source item, ' +
+        '"owner": who must do it ("Praveen" or the other person\'s name), "evidence": max 8 words quoted or paraphrased showing it is his, ' +
+        '"same_as": the matching line from his list if it duplicates one, else null, "project": one of his project names or null, "due": "YYYY-MM-DD" if a deadline is stated, else null}. ' +
+        "Reply [] if there are none.";
+      return sample.json(prompt).catch(function (e) { throw { sample: true, code: e && e.code, message: e && e.message }; })
+        .then(function (v) { return { found: Array.isArray(v) ? v : (v && v.items) || [], msgs: fresh, partial: partial, read: read, flowOk: flowOk, markSeen: markSeen, skippedOthers: skippedOthers, known: known }; });
+    }).then(function (r) {
+      var n = 0, dropped = 0, known = (r.known || []).slice();
+      r.found.forEach(function (f) {
+        if (!f || !f.text) return;
+        var text = String(f.text).slice(0, 120), m = r.msgs[f.ref] || {};
+        /* Second check on Claude's answer: drop anything owned by someone else, flagged as a repeat, or close to a task already on the list. */
+        if ((f.owner && !ME.test(String(f.owner)) && !/^(me|myself|you)$/i.test(String(f.owner))) || f.same_as ||
+            known.some(function (k) { return similar(text, k); })) { dropped++; return; }
+        var pj = f.project ? projByPrefix(String(f.project)) : null;
+        var item = { id: "s" + (state.nextId++), text: text, source: m.source || "Inbox", from: m.from || "", link: m.link || "" };
+        if (pj) item.proj = pj.id;
+        if (f.due && /^\d{4}-\d{2}-\d{2}$/.test(f.due) && f.due >= addDays(today(), -7)) item.due = f.due;
+        if (f.evidence) item.why = String(f.evidence).slice(0, 80);
+        state.inbox.items.push(item); known.push(text);
+        n++;
+      });
+      if (r.markSeen) r.markSeen();
+      state.inbox.lastScan = started;
+      if (r.flowOk) state.inbox.lastScanFlow = started;
+      var filtered = (r.skippedOthers || 0) + dropped;
+      scanNote = r.read + (n ? n + " new action item" + (n === 1 ? "" : "s") + " for you." : "Nothing new that needs you.") +
+        (filtered ? " Skipped " + filtered + " meant for others or already on your list." : "") + r.partial;
+      scanWarn = !!r.partial; scanning = false; state.inbox.note = scanNote;
+      changed();
+    }).catch(function (e) {
+      scanning = false; scanWarn = true;
+      scanNote = e && e.sample
+        ? (e.code === "rate_limited" ? "Claude is busy right now. Try again in a few minutes." : e.code === "not_granted" ? "This page needs your OK to ask Claude. Tap Scan inbox and allow it." : "Claude couldn't sort the messages" + (e.message ? ": " + e.message : "."))
+        : mcpMessage(e, M365);
+      render();
+    });
+  }
+
+  /* Opening the add box always works: it is reachable from the header button and the floating one,
+     clears any half-finished drag that could block taps, and scrolls the box into view. */
+  function openAdd() {
+    if (drag) endDrag(true);
+    document.body.classList.remove("dragging");
+    suppressClick = false;
+    if (filter === "daily") { filter = "personal"; lsSet("tasks-filter", filter); }
+    addOpen = true; focusAdd = true; render();
+    var f = document.getElementById("addForm");
+    if (f) { try { f.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
+  }
+
+  document.getElementById("toastUndo").addEventListener("click", function () {
+    if (!undoSnap) return;
+    state = JSON.parse(undoSnap); undoSnap = null;
+    document.getElementById("toast").classList.remove("show");
+    openId = null; editId = null; changed();
+  });
+
+  root.addEventListener("click", function (ev) {
+    if (suppressClick) { suppressClick = false; return; }
+    var b = ev.target.closest("button"); if (!b) return;
+    var d = b.dataset;
+    if (d.scan) { scan(); return; }
+    if (d.older) { showOlderDone = true; render(); return; }
+    if (d.star) {
+      var st = find(d.star); if (!st) return;
+      if (isToday(st)) { delete st.star; openId = null; changed(); return; }
+      var n3 = state.tasks.filter(function (x) { return isToday(x) && isWork(x) === isWork(st); }).length;
+      if (n3 >= 3) { showToast("Today already has 3. Remove one first.", null); return; }
+      st.star = today(); openId = null; changed(); return;
+    }
+    if (d.addopen) { openAdd(); return; }
+    if (d.addclose) { addOpen = false; addTag = null; addDue = null; addProj = null; addPri = false; render(); return; }
+    if (d.wmode) { workMode = d.wmode; lsSet("tasks-workmode", workMode); openId = null; openP = null; render(); return; }
+    if (d.adddue) { addDue = d.adddue; focusAdd = true; render(); return; }
+    if (d.addpri) { addPri = !addPri; focusAdd = true; render(); return; }
+    if (d.addproj) { addProj = addProj === d.addproj ? null : d.addproj; focusAdd = true; render(); return; }
+    if (d.newproj) { workMode = "proj"; lsSet("tasks-workmode", workMode); addOpen = false; render(); var pa = document.getElementById("pAddInput"); if (pa) { pa.scrollIntoView({ block: "center" }); pa.focus(); } return; }
+    if (d.popen) { openP = openP === d.popen ? null : d.popen; render(); return; }
+    if (d.pcolor) { var pc = findP(d.pcolor); if (pc) { pc.color = +d.n; changed(); } return; }
+    if (d.pdel) {
+      var snapP = snapshot(), pd = findP(d.pdel);
+      state.projects = state.projects.filter(function (x) { return x.id !== d.pdel; });
+      state.tasks.forEach(function (x) { if (x.proj === d.pdel) delete x.proj; });
+      openP = null; showToast("Deleted project: " + (pd ? pd.name : ""), snapP); changed(); return;
+    }
+    if (d.bucket) { var bt = find(d.bucket); if (bt) { var snB = snapshot(); if (moveToBucket(bt, d.to)) { openId = null; showToast("Moved to " + WBUCKETS.filter(function (x) { return x.b === d.to; })[0].label + ": " + bt.text, snB); changed(); } } return; }
+    if (d.setpri) { var sp = find(d.setpri); if (sp) { if (sp.pri === "high") delete sp.pri; else sp.pri = "high"; changed(); } return; }
+    if (d.setproj) { var sj = find(d.setproj); if (sj) { if (sj.proj === d.p) delete sj.proj; else sj.proj = d.p; changed(); } return; }
+    if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
+    if (d.rdot) { var rd = findR(d.rdot); if (rd) { var kd = keyFor(dayOffset), cd = rcount(rd, kd), ii = +d.i; rset(rd, kd, cd > ii ? ii : ii + 1); changed(); } return; }
+    if (d.day) { dayOffset = Math.min(0, Math.max(-60, dayOffset + (+d.day))); openR = null; editR = null; render(); return; }
+    if (d.ropen) { openR = openR === d.ropen ? null : d.ropen; editR = null; render(); return; }
+    if (d.rtimes) { var rn = findR(d.rtimes); if (rn) { rn.times = +d.n; changed(); } return; }
+    if (d.redit) { editR = d.redit; render(); return; }
+    if (d.rdel) { var snapR = snapshot(), rx = findR(d.rdel); state.routines = state.routines.filter(function (x) { return x.id !== d.rdel; }); openR = null; showToast("Deleted routine: " + (rx ? rx.name : ""), snapR); changed(); return; }
+    if (d.filter) { filter = d.filter; lsSet("tasks-filter", filter); openId = null; addOpen = false; addTag = null; render(); return; }
+    if (d.addsec) { addSec = d.addsec; focusAdd = true; render(); return; }
+    if (d.toggle) { collapsed[d.toggle] = !collapsed[d.toggle]; saveCollapsed(); render(); return; }
+    if (d.open) { openId = openId === d.open ? null : d.open; editId = null; render(); return; }
+    if (d.edit) { editId = d.edit; render(); return; }
+    if (d.settag) {
+      var w = find(d.settag); if (!w) return;
+      var snW = snapshot(), wasWork = isWork(w); w.tag = d.tag;
+      if (wasWork !== isWork(w)) { openId = null; showToast("Moved to " + (isWork(w) ? "Work" : "Personal") + ": " + w.text, snW); }
+      changed(); return;
+    }
+    if (d.addtag) { addTag = addTag === d.addtag ? null : d.addtag; focusAdd = true; render(); return; }
+    if (d.take) {
+      var snapT = snapshot(), s = null;
+      state.inbox.items = state.inbox.items.filter(function (x) { if (x.id === d.take) { s = x; return false; } return true; });
+      if (s) {
+        var nt = { id: s.id.replace(/^s/, "t"), text: s.text, sec: d.to, tag: "Work" };
+        if (s.proj && findP(s.proj)) nt.proj = s.proj;
+        if (s.due && d.to === "now") nt.due = s.due;
+        state.tasks.unshift(nt); normalize();
+        showToast("Added to " + WBUCKETS.filter(function (x) { return x.b === bucketOf(nt); })[0].label + ": " + s.text, snapT);
+      }
+      if (!state.inbox.items.length) scanNote = null;
+      changed(); return;
+    }
+    if (d.skip) { state.inbox.items = state.inbox.items.filter(function (x) { if (x.id === d.skip) { remember(x.text); return false; } return true; }); if (!state.inbox.items.length) scanNote = null; changed(); return; }
+    if (d.skipall) { var snapS = snapshot(); state.inbox.items.forEach(function (x) { remember(x.text); }); state.inbox.items = []; scanNote = null; delete state.inbox.note; showToast("Dismissed inbox suggestions", snapS); changed(); return; }
+    if (d.check) {
+      var t = find(d.check); if (!t) return;
+      var snap = snapshot();
+      if (isDoneSec(t.sec)) {
+        t.sec = t.from || (t.sec === "bought" ? "shop" : "now"); delete t.from; delete t.doneAt; openId = null;
+        showToast("Moved back to " + t.sec.charAt(0).toUpperCase() + t.sec.slice(1), snap); changed(); return;
+      }
+      completeTask(t, b.closest(".task"), snap, b);
+      return;
+    }
+    if (d.toshop) { var ts = find(d.toshop); if (ts) { var sn1 = snapshot(); ts.sec = "shop"; delete ts.tag; openId = null; showToast("Moved to Shopping: " + ts.text, sn1); changed(); } return; }
+    if (d.totask) { var tt = find(d.totask); if (tt) { var sn2 = snapshot(); tt.sec = "next"; tt.tag = "Personal"; openId = null; showToast("Moved to Next: " + tt.text, sn2); changed(); } return; }
+    if (d.snooze) { var z = find(d.snooze); if (z) snoozeTask(z, root.querySelector('.task[data-id="' + z.id + '"]')); return; }
+    if (d.move) { var m = find(d.move); if (m) { m.sec = d.to; openId = null; changed(); } return; }
+    if (d.del) {
+      var snapD = snapshot(), del = find(d.del);
+      state.tasks = state.tasks.filter(function (x) { return x.id !== d.del; }); openId = null;
+      showToast("Deleted: " + (del ? del.text : "task"), snapD); changed(); return;
+    }
+    if (d.clear) {
+      var ck = d.clear === "bought" ? "bought" : "done";
+      var snapC = snapshot(), gone = state.tasks.filter(function (x) { return x.sec === ck && visible(x); }).length;
+      state.tasks = state.tasks.filter(function (x) { return !(x.sec === ck && visible(x)); });
+      showToast("Cleared " + gone + (ck === "bought" ? " bought item" : " done task") + (gone === 1 ? "" : "s"), snapC); changed(); return;
+    }
+  });
+
+  root.addEventListener("mousedown", function (ev) { if (ev.target.closest(".add .chip")) ev.preventDefault(); });
+  root.addEventListener("input", function (ev) {
+    if (ev.target.id !== "addInput") return;
+    showHint(ev.target);
+  });
+  root.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var f = ev.target;
+    if (f.id === "rAdd") {
+      var rv = (document.getElementById("rAddInput").value || "").trim(); if (!rv) return;
+      state.routines.push({ id: "r" + (state.nextId++), name: rv, times: 1 }); changed();
+      var ra = document.getElementById("rAddInput"); if (ra) ra.focus(); return;
+    }
+    if (f.id === "pAdd") {
+      var pv = (document.getElementById("pAddInput").value || "").trim(); if (!pv) return;
+      if (projByPrefix(pv) && projByPrefix(pv).name.toLowerCase() === pv.toLowerCase()) { showToast("You already have " + pv, null); return; }
+      state.projects.push({ id: "p" + (state.nextId++), name: pv.slice(0, 40), color: state.projects.length % PCOLORS.length }); changed();
+      var pa2 = document.getElementById("pAddInput"); if (pa2) pa2.focus(); return;
+    }
+    if (f.dataset && f.dataset.pform) {
+      var pp = findP(f.dataset.pform), pn = (f.querySelector("input").value || "").trim();
+      if (pp && pn) pp.name = pn.slice(0, 40); openP = null; changed(); return;
+    }
+    if (f.dataset && f.dataset.rform) {
+      var rr = findR(f.dataset.rform), nv = (f.querySelector("input").value || "").trim();
+      if (rr && nv) rr.name = nv; editR = null; openR = null; changed(); return;
+    }
+    if (f.dataset && f.dataset.editform) {
+      var t = find(f.dataset.editform), v = (f.querySelector('input[type="text"]').value || "").trim();
+      if (t && v) t.text = v;
+      if (t && f.elements.due) {
+        var dv = f.elements.due.value, ev = +f.elements.every.value, oldDue = t.due;
+        if (dv) t.due = dv; else delete t.due;
+        if (ev) t.every = ev; else delete t.every;
+        if (t.due && t.due > today() && t.sec === "now" && t.due !== oldDue) t.sec = "next";
+      }
+      editId = null; openId = null; changed(); return;
+    }
+    var input = document.getElementById("addInput");
+    var text = (input.value || "").trim(); if (!text) return;
+    var snapA = snapshot(), q = filter === "shop" ? { text: text } : parseQuick(text), bits = filter === "shop" ? [] : quickSummary(q);
+    var task = { id: "t" + (state.nextId++), text: q.text, sec: filter === "shop" ? "shop" : addSec };
+    if (filter !== "shop") task.tag = q.tag || (filter === "work" ? "Work" : (addTag || "Personal"));
+    if (filter === "work" && task.tag === "Work") {
+      whenToTask(addDue || "week", task);
+      var pj = q.proj || addProj; if (pj) task.proj = pj;
+      if (q.pri || addPri) task.pri = "high";
+    }
+    if (q.due) { task.due = q.due; if (q.due <= today()) task.sec = "now"; else if (task.sec === "now") task.sec = "next"; }
+    if (q.every) task.every = q.every;
+    state.tasks.unshift(task);
+    if (collapsed[task.sec]) { collapsed[task.sec] = false; saveCollapsed(); }
+    var where = task.tag === "Work" && filter === "work" ? WBUCKETS.filter(function (x) { return x.b === bucketOf(task); })[0].label : task.sec.charAt(0).toUpperCase() + task.sec.slice(1);
+    if (bits.length || filter === "work") showToast("Added to " + where + (bits.length ? " · " + bits.join(" · ") : "") + ((filter === "work") !== (task.tag === "Work") ? " (on " + (task.tag === "Work" ? "Work" : "Personal") + ")" : ""), snapA);
+    focusAdd = true; clearAdd = true; changed();
+  });
+
+  /* Drag to reorder: grab the dotted handle, drop anywhere in Now / Next / Later / Done (or on a collapsed section's header). */
+  /* Drag a task by its dotted handle. */
+  var drag = null, press = null;
+  root.addEventListener("pointerdown", function (ev) {
+    suppressClick = false;
+    var g = ev.target.closest(".grip"); if (!g || drag || ev.button > 0) return;
+    ev.preventDefault();
+    startDrag(g.closest(".task"), g, ev.clientX, ev.clientY, ev.pointerId);
+  });
+  function cancelPress() { if (press) { clearTimeout(press.timer); press = null; } }
+  document.addEventListener("touchmove", function (ev) { if (drag) ev.preventDefault(); }, { passive: false });
+  function startDrag(li, g, cx, cy, pid) {
+    suppressClick = true;
+    var r = li.getBoundingClientRect();
+    var ghost = li.cloneNode(true);
+    ghost.className = "task ghost" + (li.classList.contains("done") ? " done" : "");
+    ghost.style.cssText = "width:" + r.width + "px;left:" + r.left + "px;top:" + r.top + "px;--c:" + getComputedStyle(li.closest("section")).getPropertyValue("--c");
+    document.body.appendChild(ghost);
+    var ph = document.createElement("li"); ph.className = "placeholder"; ph.style.height = (li.querySelector(".task-main").offsetHeight - 8) + "px";
+    li.parentNode.insertBefore(ph, li); li.style.display = "none";
+    drag = { id: li.dataset.id, li: li, ghost: ghost, ph: ph, dy: cy - r.top, x: cx, y: cy, y0: cy, moved: false, head: null };
+    document.body.classList.add("dragging");
+    try { g.setPointerCapture(pid); } catch (e) {}
+    requestAnimationFrame(autoScroll);
+  }
+  function setHead(h) {
+    if (drag.head && drag.head !== h) drag.head.classList.remove("drop");
+    drag.head = h; if (h) h.classList.add("drop");
+    drag.ph.style.display = h ? "none" : "";
+  }
+  function dragTo(x, y) {
+    drag.ghost.style.top = (y - drag.dy) + "px";
+    var el = document.elementFromPoint(x, y); if (!el) return;
+    if (el.closest('section[data-sec="today"]')) return;
+    var head = el.closest(".sec-head");
+    if (head) {
+      var sec = head.closest("section");
+      if (sec.classList.contains("collapsed")) { setHead(head); return; }
+      setHead(null); var l = sec.querySelector(".list"); l.insertBefore(drag.ph, l.firstChild); return;
+    }
+    var t = el.closest(".task, .empty");
+    if (!t || t === drag.ph || t.classList.contains("ghost")) return;
+    setHead(null);
+    if (t.classList.contains("empty")) { t.parentNode.insertBefore(drag.ph, t); return; }
+    var rr = t.getBoundingClientRect();
+    t.parentNode.insertBefore(drag.ph, y < rr.top + rr.height / 2 ? t : t.nextSibling);
+  }
+  function autoScroll() {
+    if (!drag) return;
+    if (!drag.moved) { requestAnimationFrame(autoScroll); return; }
+    var m = 80, v = 0, H = window.innerHeight;
+    if (drag.y < m) v = -(m - drag.y) / 4; else if (drag.y > H - m) v = (drag.y - (H - m)) / 4;
+    if (v) { window.scrollBy(0, v); dragTo(drag.x, drag.y); }
+    requestAnimationFrame(autoScroll);
+  }
+  document.addEventListener("pointermove", function (ev) {
+    if (press && !drag) { if (Math.abs(ev.clientX - press.x) > 8 || Math.abs(ev.clientY - press.y) > 8) cancelPress(); return; }
+    if (!drag) return; ev.preventDefault();
+    drag.x = ev.clientX; drag.y = ev.clientY; if (Math.abs(drag.y - drag.y0) > 8) drag.moved = true; dragTo(ev.clientX, ev.clientY);
+  }, { passive: false });
+  function endDrag(cancel) {
+    var d = drag; drag = null;
+    document.body.classList.remove("dragging"); d.ghost.remove();
+    var sec = null, beforeId = null, atTop = false;
+    if (d.head) { sec = d.head.closest("section").dataset.sec; atTop = true; }
+    else {
+      var s = d.ph.closest("section"); sec = s && s.dataset.sec;
+      var n = d.ph.nextElementSibling;
+      while (n && (!n.dataset.id || n === d.li)) n = n.nextElementSibling;
+      beforeId = n ? n.dataset.id : null;
+    }
+    var t = find(d.id);
+    if (cancel || !sec || !t) { render(); return; }
+    var before = snapshot(), prev = t.sec;
+    /* Work timeline buckets and project cards: change the date or project, then reorder. */
+    if (sec.indexOf("w:") === 0 || sec.indexOf("p:") === 0) {
+      if (sec.indexOf("w:") === 0 && !moveToBucket(t, sec.slice(2))) { render(); return; }
+      if (sec.indexOf("p:") === 0) { if (sec.length > 2) t.proj = sec.slice(2); else delete t.proj; }
+      if (beforeId && beforeId !== t.id) {
+        state.tasks = state.tasks.filter(function (x) { return x !== t; });
+        for (var bi = 0; bi < state.tasks.length; bi++) if (state.tasks[bi].id === beforeId) { state.tasks.splice(bi, 0, t); break; }
+        if (state.tasks.indexOf(t) < 0) state.tasks.push(t);
+      }
+      openId = null; editId = null;
+      if (snapshot() === before) { render(); return; }
+      var lbl = sec.indexOf("w:") === 0 ? WBUCKETS.filter(function (x) { return x.key === sec; })[0].label : (findP(sec.slice(2)) || { name: "No project" }).name;
+      showToast("Moved to " + lbl + ": " + t.text, before); changed(); return;
+    }
+    state.tasks = state.tasks.filter(function (x) { return x !== t; });
+    if (isDoneSec(sec) && !isDoneSec(prev)) { t.from = prev; t.doneAt = today(); if (sec === "done") spawnRepeat(t); }
+    if (!isDoneSec(sec) && isDoneSec(prev)) { delete t.from; delete t.doneAt; }
+    t.sec = sec;
+    var idx = -1, i;
+    if (beforeId) { for (i = 0; i < state.tasks.length; i++) if (state.tasks[i].id === beforeId) { idx = i; break; } }
+    else if (atTop) { for (i = 0; i < state.tasks.length; i++) if (state.tasks[i].sec === sec) { idx = i; break; } }
+    else { for (i = state.tasks.length - 1; i >= 0; i--) if (state.tasks[i].sec === sec) { idx = i + 1; break; } }
+    if (idx < 0) state.tasks.push(t); else state.tasks.splice(idx, 0, t);
+    openId = null; editId = null;
+    if (snapshot() === before) { render(); return; }
+    if (sec !== prev) showToast("Moved to " + (sec === "shop" ? "To buy" : sec.charAt(0).toUpperCase() + sec.slice(1)) + ": " + t.text, before);
+    changed();
+  }
+  document.addEventListener("pointerup", function () { cancelPress(); if (drag) endDrag(false); });
+  document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
+  /* Phones: the webview sometimes swallows pointerup after a drag. End it on touchend too, so the page never stays in drag mode (which blocked the add button). */
+  document.addEventListener("touchend", function (ev) { if (drag && (!ev.touches || !ev.touches.length)) endDrag(!drag.moved); });
+  document.addEventListener("touchcancel", function () { if (drag) endDrag(true); });
+
+  /* Swipe a row: right = done, left = tomorrow. Vertical moves are left to the page scroll. */
+  /* Touch events drive swipes on phones (pointer events get cancelled inside the app's webview); the mouse uses pointer events. */
+  var swipe = null;
+  function beginSwipe(target, x, y, id) {
+    if (drag || swipe) return;
+    var main = target.closest && target.closest(".task-main"); if (!main) return;
+    if (target.closest(".grip, .check, .star, input, select, textarea")) return;
+    var li = main.closest(".task");
+    if (!li || li.classList.contains("editing") || li.classList.contains("open") || li.classList.contains("done") || li.classList.contains("ghost")) return;
+    var t = find(li.dataset.id); if (!t || isDoneSec(t.sec)) return;
+    swipe = { li: li, main: main, t: t, x0: x, y0: y, dx: 0, on: false, pid: id, w: li.offsetWidth, left: t.sec !== "shop" };
+  }
+  /* Returns true while the gesture is a horizontal swipe (caller then blocks native scrolling). */
+  function moveSwipe(x, y) {
+    if (!swipe) return false;
+    var dx = x - swipe.x0, dy = y - swipe.y0;
+    if (!swipe.on) {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { swipe = null; return false; }
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return false;
+      if (dx < 0 && !swipe.left) { swipe = null; return false; }
+      swipe.on = true; swipe.li.classList.add("swiping"); swipe.x0 = x - (dx > 0 ? 1 : -1); dx = x - swipe.x0;
+    }
+    if (dx < 0 && !swipe.left) dx = 0;
+    swipe.dx = dx;
+    var lim = Math.min(100, swipe.w * .3), p = Math.min(1, Math.abs(dx) / lim);
+    swipe.li.classList.toggle("sw-r", dx > 0); swipe.li.classList.toggle("sw-l", dx < 0);
+    var armed = Math.abs(dx) >= lim;
+    if (armed && !swipe.armed) buzz(8);
+    swipe.armed = armed; swipe.li.classList.toggle("sw-armed", armed);
+    swipe.li.style.setProperty("--p", (.35 + p * .65).toFixed(2));
+    swipe.main.style.transform = "translateX(" + dx + "px)";
+    return true;
+  }
+  function endSwipe(cancel) {
+    var s = swipe; swipe = null; if (!s || !s.on) return;
+    suppressClick = true; setTimeout(function () { suppressClick = false; }, 400);
+    if (!cancel && s.armed) {
+      s.main.style.transition = "transform .22s ease"; s.main.style.transform = "translateX(" + (s.dx > 0 ? s.w : -s.w) + "px)";
+      if (s.dx > 0) completeTask(s.t, s.li, snapshot(), s.li.querySelector(".check"), true); else snoozeTask(s.t, s.li);
+      return;
+    }
+    s.li.classList.add("swipe-back"); s.main.style.transform = "";
+    setTimeout(function () { s.li.classList.remove("swiping", "swipe-back", "sw-r", "sw-l", "sw-armed"); }, 220);
+  }
+  root.addEventListener("touchstart", function (ev) {
+    if (ev.touches.length !== 1) { endSwipe(true); return; }
+    var tc = ev.touches[0]; beginSwipe(ev.target, tc.clientX, tc.clientY, "touch");
+  }, { passive: true });
+  document.addEventListener("touchmove", function (ev) {
+    if (!swipe || swipe.pid !== "touch") return;
+    var tc = ev.touches[0]; if (!tc) return;
+    if (moveSwipe(tc.clientX, tc.clientY) && ev.cancelable) ev.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchend", function () { if (swipe && swipe.pid === "touch") endSwipe(false); });
+  document.addEventListener("touchcancel", function () { if (swipe && swipe.pid === "touch") endSwipe(swipe.armed ? false : true); });
+  root.addEventListener("pointerdown", function (ev) {
+    if (ev.pointerType !== "mouse" || ev.button > 0) return;
+    beginSwipe(ev.target, ev.clientX, ev.clientY, "mouse");
+  });
+  document.addEventListener("pointermove", function (ev) {
+    if (!swipe || swipe.pid !== "mouse") return;
+    if (moveSwipe(ev.clientX, ev.clientY)) { try { swipe.main.setPointerCapture(ev.pointerId); } catch (e) {} }
+  });
+  document.addEventListener("pointerup", function () { if (swipe && swipe.pid === "mouse") endSwipe(false); });
+
+
+  render();
+
+  var tries = 0;
+  (function connect() {
+    if (!(window.claude && window.claude.use)) {
+      if (++tries < 40) return setTimeout(connect, 250);
+      fallback("Open in Claude to save"); return;
+    }
+    window.claude.use("db").then(function (db) {
+      if (!db) { fallback("View only"); return; }
+      dbRef = db.doc("app/state"); canSave = true; setSync("ok", "Synced");
+      var timer = setTimeout(function () { if (!loaded) fallback("Can't reach your data yet"); }, 10000);
+      dbRef.onSnapshot(function (snap) {
+        if (!snap.metadata || !snap.metadata.fromCache) clearTimeout(timer);
+        applyRemote(snap);
+      }, function (e) { clearTimeout(timer); if (!loaded) fallback("Can't reach your data"); else setSync("warn", "Offline — reopen the page"); });
+    }).catch(function () { fallback("View only"); });
+  })();
+  function fallback(msg) { if (!loaded) { loaded = true; normalize(); render(); } if (!dbRef) canSave = false; setSync("warn", msg); }
+})();

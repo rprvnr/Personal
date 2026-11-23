@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1013">
 <title>Praveen's Tasks</title>
 <style id="css">
 /* True-black theme. One thumb-width column: header + filter, sticky quick-add, inbox suggestions, then Now / Next / Later / Done. */
@@ -217,7 +218,7 @@ body.dragging { -webkit-user-select: none; user-select: none; }
 body.dragging .add, body.dragging .toast { pointer-events: none; }
 
 /* Add button (floating, thumb reach) */
-.fab { position: fixed; right: max(16px, calc(50% - 264px)); bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 15; width: 54px; height: 54px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 30px; font-weight: 400; line-height: 1; cursor: pointer; box-shadow: 0 10px 26px rgba(0,0,0,.55); display: grid; place-items: center; padding: 0 0 3px; }
+.fab { position: fixed; right: max(16px, calc(50% - 264px)); bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 15; width: 54px; height: 54px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 30px; font-weight: 400; line-height: 1; cursor: pointer; box-shadow: 0 10px 26px rgba(0,0,0,.55); display: grid; place-items: center; padding: 0 0 3px; }
 .fab:active { transform: scale(.94); }
 body.dragging .fab { pointer-events: none; opacity: .3; }
 /* One-tap star */
@@ -227,18 +228,49 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
 .star:active { transform: scale(.85); }
 
 /* Undo toast */
-.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translate(-50%, 260%); width: min(520px, calc(100% - 32px)); background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.8); transition: transform .25s ease; z-index: 20; font-size: 14px; }
-.toast.show { transform: translate(-50%, 0); }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translate(-50%, 240px); opacity: 0; visibility: hidden; width: min(520px, calc(100% - 32px)); background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.8); transition: transform .25s ease, opacity .2s, visibility .25s; z-index: 20; font-size: 14px; }
+.toast.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
 .toast span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toast button { font: inherit; font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--accent); background: none; border: 0; padding: 8px 10px; cursor: pointer; }
+/* Header stays pinned with its own add button, so adding never depends on the floating button being on screen. */
+header.bar { position: sticky; top: 0; z-index: 12; margin: -10px -12px 0; padding: 8px 12px 6px; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.hadd { flex: none; width: 38px; height: 38px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.hadd svg, .fab svg { width: 20px; height: 20px; }
+.fab svg { width: 26px; height: 26px; }
+.hadd:active { transform: scale(.94); }
+.add { scroll-margin-top: 64px; }
+/* In the phone app the bottom of the frame can sit under the app's own bar: lift the floating button clear of it. */
+@media (pointer: coarse) { .fab { bottom: calc(84px + env(safe-area-inset-bottom)); } .toast { bottom: calc(150px + env(safe-area-inset-bottom)); } .wrap { padding-bottom: 180px; } }
+.sub .sep { color: var(--muted); }
+/* Work: timeline / projects */
+.wmode { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); align-self: flex-start; }
+.wmode button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 14px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.wmode button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); }
+.pchip { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: var(--c); margin-left: 8px; vertical-align: 1px; white-space: nowrap; }
+.pdot { width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none; }
+.meta.flag { color: var(--danger); }
+.meta.flag svg, .flagchip svg { width: 11px; height: 11px; vertical-align: -1px; }
+.flagchip[aria-pressed="true"] { color: var(--danger); }
+.sec-head .hint.hot { color: var(--danger); font-weight: 600; }
+.sec-tog { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.pname { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13.5px; }
+.pmore { flex: none; width: 30px; height: 26px; display: grid; place-items: center; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0; }
+.pmore svg { width: 16px; height: 16px; }
+.sec-head .count + .pmore { margin-left: -2px; }
+.pedit { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.pedit input { font: inherit; font-size: 16px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--accent); background: var(--bg); color: var(--ink); }
+.swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer; padding: 0; }
+.swatch[aria-pressed="true"] { border-color: var(--ink); }
+.sugg .why { font-style: italic; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
-<body>
+<body class="ui-classic">
 <div class="wrap" id="root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastUndo" type="button">Undo</button></div>
 <script id="state" type="application/json">{"tasks": [{"id": "t141", "text": "Unaided file", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-13"}, {"id": "t140", "text": "Shoe cleaner", "sec": "shop"}, {"id": "t138", "text": "Do laundry", "sec": "done", "tag": "Errands", "from": "now", "doneAt": "2026-11-13"}, {"id": "t137", "text": "Reach out to Ankit for project folder", "sec": "now", "tag": "Work", "nowSince": "2026-11-13"}, {"id": "t104", "text": "Clean the room", "sec": "next", "tag": "Home", "every": 7}, {"id": "t134", "text": "Call Pranjal", "sec": "next", "tag": "Personal"}, {"id": "t133", "text": "Alexion poster", "sec": "now", "tag": "Work", "nowSince": "2026-11-13"}, {"id": "t132", "text": "Sort gmail inboxes", "sec": "now", "tag": "Personal", "nowSince": "2026-11-12"}, {"id": "t103", "text": "Set up Claude for Lux and build a tracker for her", "sec": "next", "tag": "Personal"}, {"id": "t130", "text": "Raise SPI ticket", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-12"}, {"id": "t119", "text": "AI form", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-10"}, {"id": "t114", "text": "Finance tracker", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-09"}, {"id": "t116", "text": "Do laundry", "sec": "done", "tag": "Personal", "every": 7, "due": "2026-11-15", "from": "later", "doneAt": "2026-11-13"}, {"id": "t113", "text": "Book room for parents", "sec": "later", "tag": "Personal"}, {"id": "t22", "text": "Pants – Levi's 555 or 505", "sec": "shop"}, {"id": "t112", "text": "Shelf or organiser", "sec": "shop"}, {"id": "t111", "text": "Nail paint", "sec": "shop"}, {"id": "t102", "text": "Accept ChatGPT Business workspace invite from Vijay", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-10"}, {"id": "t105", "text": "Review survey slides in detail and leave comments", "sec": "now", "tag": "Work", "nowSince": "2026-11-09"}, {"id": "t12", "text": "Text Sruthilaya", "sec": "now", "tag": "Personal", "nowSince": "2026-11-09"}, {"id": "t2", "text": "Dashboard – Meningitis vaccine", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-11"}, {"id": "t3", "text": "BPM ATU materials", "sec": "next", "tag": "Work"}, {"id": "t1", "text": "BLENREP full report", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-13"}, {"id": "t4", "text": "Sanofi AE training", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-10"}, {"id": "t6", "text": "Talk about San PCA R&R", "sec": "later", "tag": "Work"}, {"id": "t124", "text": "Update IDP on Darwinbox (overdue, mandatory)", "sec": "now", "tag": "Work", "nowSince": "2026-11-12"}, {"id": "t125", "text": "Fix TECN spacing and % in headers in BLENREP Oct report", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-13"}, {"id": "t127", "text": "Test Takeda survey and confirm images and split questions", "sec": "now", "tag": "Work", "nowSince": "2026-11-12"}, {"id": "t36", "text": "Galen setup", "sec": "now", "tag": "Work", "nowSince": "2026-11-09"}, {"id": "t30", "text": "Hang poster", "sec": "done", "tag": "Home", "from": "now", "doneAt": "2026-11-11"}, {"id": "t37", "text": "Connect Claude + Instinct + Wispr Flow", "sec": "now", "tag": "Personal", "nowSince": "2026-11-09"}, {"id": "t131", "text": "Check the auto pay", "sec": "now", "tag": "Personal", "nowSince": "2026-11-12"}, {"id": "t39", "text": "Check Claude mod for subagents", "sec": "now", "tag": "Personal", "nowSince": "2026-11-09"}, {"id": "t106", "text": "Guide Pallika on updating raw data workbook with Claude", "sec": "done", "tag": "Work", "from": "now", "doneAt": "2026-11-13"}, {"id": "t121", "text": "BMS HCP-PT follow-up", "sec": "now", "tag": "Work", "nowSince": "2026-11-12"}, {"id": "t7", "text": "Check car and receive it", "sec": "now", "tag": "Personal", "nowSince": "2026-11-13"}, {"id": "t10", "text": "Do laundry", "sec": "done", "tag": "Personal", "from": "now", "doneAt": "2026-11-08"}, {"id": "t5", "text": "Office infrastructure message", "sec": "next", "tag": "Work"}, {"id": "t45", "text": "Go swimming", "sec": "next", "tag": "Goals"}, {"id": "t47", "text": "Drink matcha", "sec": "next", "tag": "Personal"}, {"id": "t11", "text": "Set up MSF call with Utkarsh", "sec": "next", "tag": "Work"}, {"id": "t38", "text": "Connect Fitbit to Claude", "sec": "next", "tag": "Personal"}, {"id": "t17", "text": "Scooty service", "sec": "next", "tag": "Errands"}, {"id": "t13", "text": "Text Bharat", "sec": "next", "tag": "Personal", "due": "2026-11-21"}, {"id": "t15", "text": "Get Luxi laptop", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t136", "text": "Give clothes for ironing", "sec": "next", "tag": "Errands"}, {"id": "t18", "text": "Car: clanking noise check", "sec": "next", "tag": "Errands"}, {"id": "t20", "text": "Check lighter", "sec": "done", "tag": "Errands", "from": "next", "doneAt": "2026-11-08"}, {"id": "t25", "text": "Exploration AI product", "sec": "next", "tag": "Work"}, {"id": "t26", "text": "Research reporter", "sec": "done", "tag": "Work", "from": "next", "doneAt": "2026-11-10"}, {"id": "t135", "text": "Haircut", "sec": "next", "tag": "Personal"}, {"id": "t27", "text": "Plan Bangalore trip", "sec": "next", "tag": "Personal"}, {"id": "t21", "text": "Clean shoes", "sec": "later", "tag": "Errands"}, {"id": "t16", "text": "Blood tests", "sec": "later", "tag": "Errands"}, {"id": "t8", "text": "Book Mumbai flights", "sec": "later", "tag": "Personal"}, {"id": "t28", "text": "Figure out the paint situation", "sec": "later", "tag": "Home"}, {"id": "t35", "text": "Set up Obsidian", "sec": "later", "tag": "Personal"}, {"id": "t41", "text": "Look at used cars", "sec": "later", "tag": "Personal"}, {"id": "t42", "text": "Find skincare", "sec": "done", "tag": "Personal", "from": "later", "doneAt": "2026-11-08"}, {"id": "t48", "text": "Brownie ice cream", "sec": "later", "tag": "Personal"}, {"id": "t46", "text": "Read book", "sec": "later", "tag": "Goals"}, {"id": "t49", "text": "Buy task tracker", "sec": "done", "from": "now"}, {"id": "t50", "text": "Fill IDP", "sec": "done", "from": "now"}, {"id": "t51", "text": "Get tempered glass for phone", "sec": "done", "from": "now"}, {"id": "t52", "text": "Put food inside", "sec": "done", "from": "now"}, {"id": "t53", "text": "Buy socks", "sec": "done", "from": "now"}, {"id": "t54", "text": "Servier AE training", "sec": "done", "from": "now"}, {"id": "t55", "text": "Alexion message", "sec": "done", "from": "now"}, {"id": "t56", "text": "Send package", "sec": "done", "from": "now"}, {"id": "t57", "text": "Check with parents on hotel booking for December trip (service apt)", "sec": "done", "from": "now"}, {"id": "t58", "text": "Update iOS", "sec": "done", "from": "now"}, {"id": "t59", "text": "Check out Notion for the task list", "sec": "done", "from": "now"}, {"id": "t60", "text": "Buy saree", "sec": "done", "from": "now"}, {"id": "t61", "text": "RFSOV WB", "sec": "done", "from": "now"}, {"id": "t62", "text": "Sort insurance – follow up in the morning", "sec": "done", "from": "now"}, {"id": "t63", "text": "Veet", "sec": "done", "from": "now"}, {"id": "t64", "text": "Spi ticket", "sec": "done", "from": "now"}, {"id": "t65", "text": "Buy an organizer for my bag or clean it up", "sec": "done", "from": "now"}, {"id": "t66", "text": "Clean the cupboard", "sec": "done", "from": "now"}, {"id": "t67", "text": "Reset UA", "sec": "done", "from": "now"}, {"id": "t68", "text": "Flowers", "sec": "done", "from": "now"}, {"id": "t69", "text": "Hack TV", "sec": "done", "from": "now"}, {"id": "t70", "text": "Organiser for cupboard", "sec": "done", "from": "now"}, {"id": "t71", "text": "Scooty microfibre cloth", "sec": "done", "from": "now"}, {"id": "t72", "text": "Book Jailer tickets", "sec": "done", "from": "now"}, {"id": "t73", "text": "Get Lux's birthday gifts", "sec": "done", "from": "now"}, {"id": "t74", "text": "Buy car headlights", "sec": "done", "from": "now"}, {"id": "t75", "text": "QC: clean speaker notes, footnotes and sample size", "sec": "done", "from": "now"}, {"id": "t76", "text": "Explore patient profiles", "sec": "done", "from": "now"}, {"id": "t77", "text": "QC data values", "sec": "done", "from": "now"}, {"id": "t78", "text": "QC the deck", "sec": "done", "from": "now"}, {"id": "t79", "text": "Report open items: check non-Dara in 1L for 2L patients", "sec": "done", "from": "now"}, {"id": "t80", "text": "Buy weighted blanket cover", "sec": "done", "from": "now"}, {"id": "t81", "text": "Buy flint for lighter", "sec": "done", "from": "now"}, {"id": "t82", "text": "Get Fitbit bracelet", "sec": "done", "from": "now"}, {"id": "t83", "text": "Buy detergent and fabric softener", "sec": "done", "from": "now"}, {"id": "t84", "text": "Wash bed sheets", "sec": "done", "from": "now"}, {"id": "t85", "text": "Format the deck", "sec": "done", "from": "now"}, {"id": "t86", "text": "Get towel from Lux", "sec": "done", "from": "now"}, {"id": "t87", "text": "Get a haircut", "sec": "done", "from": "now"}, {"id": "t88", "text": "Do laundry", "sec": "done", "from": "now"}, {"id": "t89", "text": "Call Bhavani", "sec": "done", "from": "now"}, {"id": "t90", "text": "Send Teams holiday block", "sec": "done", "from": "now"}, {"id": "t91", "text": "Send documents", "sec": "done", "from": "now"}, {"id": "t92", "text": "Call Sterling at 6 pm", "sec": "done", "from": "now"}, {"id": "t93", "text": "Check Takeda screener", "sec": "done", "from": "now"}, {"id": "t94", "text": "Pay car service", "sec": "done", "from": "now"}, {"id": "t95", "text": "Order skincare", "sec": "done", "from": "now"}, {"id": "t96", "text": "Wrap up BLENREP + note about Nov 3 holiday", "sec": "done", "from": "now"}, {"id": "t97", "text": "Check heart rate variability with Karthik", "sec": "done", "from": "now"}, {"id": "t9", "text": "Pants for Diwali", "sec": "bought", "from": "shop", "doneAt": "2026-11-09"}, {"id": "t14", "text": "Watch for Dad", "sec": "shop"}, {"id": "t98", "text": "Pillow", "sec": "shop"}, {"id": "t23", "text": "Slides", "sec": "shop"}, {"id": "t24", "text": "Gut health supplement", "sec": "shop"}, {"id": "t29", "text": "Lighting for room", "sec": "shop"}, {"id": "t31", "text": "Air purifier", "sec": "shop"}, {"id": "t32", "text": "Cable protector", "sec": "shop"}, {"id": "t33", "text": "Decathlon or foldable chair", "sec": "bought", "from": "shop", "doneAt": "2026-11-12"}, {"id": "t34", "text": "Adjustable weights", "sec": "shop"}, {"id": "t40", "text": "IEMs", "sec": "shop"}, {"id": "t43", "text": "CBD", "sec": "shop"}, {"id": "t139", "text": "Do laundry", "sec": "later", "every": 7, "due": "2026-11-20", "tag": "Personal"}], "nextId": 153, "inbox": {"lastScan": "2026-11-13T12:47:36.463Z", "items": [], "lastScanFlow": "2026-11-13T12:47:36.463Z"}, "routines": [{"id": "r1", "name": "Cold shower", "times": 1}, {"id": "r2", "name": "Work out", "times": 1}, {"id": "r3", "name": "Take meds", "times": 1}, {"id": "r118", "name": "Shower 2", "times": 1}], "log": {"2026-11-10": {"r3": 1}, "2026-11-11": {"r3": 1, "r118": 1}}}</script>
 <script id="app">
+window.TASKS_UI = "classic";
 (function () {
   var SECS = [
     { key: "now",   label: "Now",   hint: "this week",       c: "var(--now)" },
@@ -261,12 +293,59 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   var GRIP = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="3.5" r="1.4"/><circle cx="10.5" cy="3.5" r="1.4"/><circle cx="5.5" cy="8" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/><circle cx="5.5" cy="12.5" r="1.4"/><circle cx="10.5" cy="12.5" r="1.4"/></svg>';
   var MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.8" y="3.2" width="12.4" height="9.6" rx="2"/><path d="M2.5 4.5l5.5 4 5.5-4"/></svg>';
   var SPIN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 2a6 6 0 1 1-6 6"/></svg>';
+  var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+
+  var FLAG = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3.2 1.8a.8.8 0 0 1 .8.8v.3h8.3a.6.6 0 0 1 .5.9l-1.6 2.7 1.6 2.7a.6.6 0 0 1-.5.9H4v4.5a.8.8 0 0 1-1.6 0V2.6a.8.8 0 0 1 .8-.8z"/></svg>';
+  var MORE = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="12.5" cy="8" r="1.4"/></svg>';
+  var UI = window.TASKS_UI || "classic";
+
+  /* Work projects: each has a name and a colour slot (0-7). */
+  var PCOLORS = ["#7fb2ff", "#ffb07a", "#6fd6c8", "#e7a3f0", "#f2c46d", "#b8d97a", "#ff8a8a", "#9b8cff"];
+  var SEED_PROJECTS = [
+    ["Takeda", /takeda/i], ["BPM ATU", /\bbpm\b|\batu\b|ayvakit/i], ["Galen", /galen/i], ["MSF", /\bmsf\b/i],
+    ["Sanofi", /sanofi|\bsan\b/i], ["BMS", /\bbms\b/i], ["Alexion", /alexion/i], ["BLENREP", /blenrep/i],
+    ["AI & tools", /claude|chatgpt|\bai\b/i], ["Admin", /timesheet|apply (?:for )?leave|leave (?:request|application)|ae training|\bidp\b|darwinbox|infrastructure|spi ticket/i]
+  ];
+  function ensureProjects() {
+    if (!state.projects) state.projects = [];
+    if (state.projMigrated) return;
+    state.projMigrated = true;
+    SEED_PROJECTS.forEach(function (p, i) {
+      var used = state.tasks.some(function (t) { return t.tag === "Work" && !isDoneSec(t.sec) && p[1].test(t.text); });
+      if (!used || state.projects.some(function (x) { return x.name === p[0]; })) return;
+      state.projects.push({ id: "p" + (state.nextId++), name: p[0], color: state.projects.length % PCOLORS.length });
+    });
+    state.tasks.forEach(function (t) {
+      if (t.tag !== "Work" || t.proj) return;
+      for (var i = 0; i < SEED_PROJECTS.length; i++) if (SEED_PROJECTS[i][1].test(t.text)) {
+        var pr = state.projects.filter(function (x) { return x.name === SEED_PROJECTS[i][0]; })[0];
+        if (pr) { t.proj = pr.id; break; }
+      }
+    });
+  }
+  function findP(id) { for (var i = 0; i < (state.projects || []).length; i++) if (state.projects[i].id === id) return state.projects[i]; return null; }
+  function pColor(p) { return p ? PCOLORS[(p.color || 0) % PCOLORS.length] : "var(--muted)"; }
+  function projByPrefix(k) {
+    k = k.toLowerCase().replace(/[^a-z0-9]/g, ""); if (!k) return null;
+    var ps = state.projects || [];
+    return ps.filter(function (p) { return p.name.toLowerCase().replace(/[^a-z0-9]/g, "") === k; })[0] ||
+           ps.filter(function (p) { return p.name.toLowerCase().replace(/[^a-z0-9]/g, "").indexOf(k) === 0; })[0] || null;
+  }
+  function fixState() {
+    if (!state.tasks) state.tasks = [];
+    if (!state.inbox) state.inbox = { lastScan: null, items: [] };
+    if (!state.inbox.items) state.inbox.items = [];
+    if (!state.inbox.dismissed) state.inbox.dismissed = [];
+    if (!state.inbox.seen) state.inbox.seen = {};
+    if (!state.routines) state.routines = [];
+    if (!state.log) state.log = {};
+    ensureProjects();
+  }
 
   var state = JSON.parse(document.getElementById("state").textContent);
-  if (!state.inbox) state.inbox = { lastScan: null, items: [] };
-  if (!state.routines) state.routines = [];
-  if (!state.log) state.log = {};
-  var dayOffset = 0, openR = null, editR = null;
+  fixState();
+  var dayOffset = 0, openR = null, editR = null, openP = null;
+  var addDue = null, addProj = null, addPri = false;
   var root = document.getElementById("root");
   var addSec = "now", addTag = null, openId = null, editId = null;
   var artifact = null, canSave = null, saveTimer = null;
@@ -280,6 +359,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   var showOlderDone = false;
   var filter = lsGet("tasks-filter", "personal");
   if (filter === "all") filter = "personal";
+  var workMode = lsGet("tasks-workmode", "time");
   var addOpen = false, suppressClick = false;
   function saveCollapsed() { lsSet("tasks-collapsed-v2", collapsed); }
 
@@ -309,12 +389,66 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       if (t.due && t.due <= td && (t.sec === "next" || t.sec === "later")) t.sec = "now";
       if (t.sec === "now") { if (!t.nowSince) t.nowSince = td; } else if (t.nowSince) delete t.nowSince;
       if (t.star && t.star !== td) delete t.star;
+      if (t.proj && !findP(t.proj)) delete t.proj;
+      if (t.tag !== "Work") { delete t.proj; delete t.pri; }
     });
+  }
+  /* Work timeline: when is it due? Dated tasks go by date; undated ones by Now / Next / Later. */
+  function endOfWeek() { var d = new Date(today() + "T12:00:00"); return addDays(today(), (7 - d.getDay()) % 7); }
+  var WBUCKETS = [
+    { key: "w:overdue", b: "overdue", label: "Overdue",   c: "var(--danger)" },
+    { key: "w:today",   b: "today",   label: "Today",     c: "var(--now)" },
+    { key: "w:week",    b: "week",    label: "This week", c: "var(--next)" },
+    { key: "w:soon",    b: "soon",    label: "Coming up", c: "var(--later)" },
+    { key: "w:later",   b: "later",   label: "Later",     c: "var(--muted)" }
+  ];
+  function bucketOf(t) {
+    var td = today(), ew = endOfWeek();
+    if (t.due) {
+      if (t.due < td) return "overdue";
+      if (t.due === td) return "today";
+      if (t.due <= ew) return "week";
+      if (t.due <= addDays(ew, 14)) return "soon";
+      return "later";
+    }
+    return t.sec === "now" ? "week" : t.sec === "next" ? "soon" : "later";
+  }
+  function bucketHint(b) {
+    if (b === "week") return "by " + new Date(endOfWeek() + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+    if (b === "soon") return "next 2 weeks";
+    return "";
+  }
+  /* Moving a work task into a bucket rewrites its date only when the old one no longer fits. */
+  function moveToBucket(t, b) {
+    var td = today();
+    if (b === "overdue") return false;
+    if (b === "today") { t.due = td; t.sec = "now"; return true; }
+    if (t.due && bucketOf(t) !== b) delete t.due;
+    t.sec = b === "week" ? "now" : b === "soon" ? "next" : "later";
+    return true;
+  }
+  function workSort(list) {
+    var order = {}; state.tasks.forEach(function (t, i) { order[t.id] = i; });
+    return list.slice().sort(function (a, b) {
+      var pa = a.pri === "high" ? 0 : 1, pb = b.pri === "high" ? 0 : 1; if (pa !== pb) return pa - pb;
+      if (a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
+      if (!!a.due !== !!b.due) return a.due ? -1 : 1;
+      return order[a.id] - order[b.id];
+    });
+  }
+  function relDue(iso) {
+    var td = today(), n = daysBetween(td, iso);
+    if (n === 0) return "Today"; if (n === 1) return "Tomorrow"; if (n === -1) return "Yesterday";
+    if (n < 0) return -n + "d overdue";
+    if (n < 7) return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" });
+    return fmtDate(iso);
   }
   function spawnRepeat(t) {
     if (!t.every) return;
     var c = { id: "t" + (state.nextId++), text: t.text, sec: "later", every: t.every, due: addDays(today(), t.every) };
     if (t.tag) c.tag = t.tag;
+    if (t.proj) c.proj = t.proj;
+    if (t.pri) c.pri = t.pri;
     state.tasks.push(c);
   }
   /* Quick add: pull dates, repeats and #tags out of the typed text. */
@@ -329,6 +463,11 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     // #tag (prefix match, e.g. #err -> Errands)
     m = s.match(/\s#([a-z]+)(?=\s)/i);
     if (m) { var k = m[1].toLowerCase(), tg = TAGS.filter(function (t) { return t.toLowerCase().indexOf(k) === 0; })[0]; if (tg) { r.tag = tg; s = s.replace(m[0], " "); } }
+    // @project (prefix match, e.g. @tak -> Takeda) makes it a work task
+    m = s.match(/\s@([a-z0-9&][\w&-]*)(?=\s)/i);
+    if (m) { var pj = projByPrefix(m[1]); if (pj) { r.proj = pj.id; r.tag = "Work"; s = s.replace(m[0], " "); } }
+    // ! or !! or "urgent" / "asap" = high priority
+    if ((m = cut(/\s(?:!{1,3}|urgent|asap)(?=\s)/i))) r.pri = "high";
     // repeats
     if ((m = cut(/\s(?:every\s+day|daily)(?=\s)/i))) r.every = 1;
     else if ((m = cut(/\s(?:every\s+(?:other|2(?:nd)?)\s+week|every\s+2\s+weeks|biweekly|fortnightly)(?=\s)/i))) r.every = 14;
@@ -364,7 +503,9 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     var out = [];
     if (q.due) { var td = today(); out.push("📅 " + (q.due === td ? "Today" : q.due === addDays(td, 1) ? "Tomorrow" : new Date(q.due + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))); }
     if (q.every) out.push("↻ " + (q.every === 1 ? "Daily" : q.every === 7 ? "Weekly" : q.every === 14 ? "Every 2 weeks" : q.every === 30 ? "Monthly" : "Every " + q.every + " days"));
-    if (q.tag) out.push("#" + q.tag);
+    if (q.tag && !q.proj) out.push("#" + q.tag);
+    if (q.proj) { var pj = findP(q.proj); if (pj) out.push("@" + pj.name); }
+    if (q.pri) out.push("! High");
     return out;
   }
   function isWork(t) { return t.tag === "Work"; }
@@ -430,21 +571,22 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
 
   function render() {
     var dateStr = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-    var h = "<header>";
+    var h = '<header class="bar">';
     var tally = "";
     if (loaded && (filter === "personal" || filter === "work")) {
       var td0 = today(), wk0 = weekAgo(), nT = 0, nW = 0;
       state.tasks.forEach(function (t) { if (t.sec === "done" && t.doneAt && isWork(t) === (filter === "work")) { if (t.doneAt === td0) nT++; if (t.doneAt >= wk0) nW++; } });
-      tally = ' · <span class="tally"><b>' + nT + "</b> today · <b>" + nW + "</b> this week</span>";
+      tally = '<span class="tally"><span class="sep"> · </span><b>' + nT + "</b> today · <b>" + nW + "</b> this week</span>";
     }
     h += '<div class="top"><div class="filter" role="group" aria-label="Show">';
     [["personal", "Personal"], ["work", "Work"], ["shop", "Shop"], ["daily", "Daily"]].forEach(function (f) {
       h += '<button type="button" data-filter="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + "</button>";
     });
-    h += '</div><span class="sync ' + sync.cls + '" id="sync" title="' + esc(sync.text) + '"><span class="led"></span><span id="syncText">' + (sync.cls === "warn" ? esc(sync.text) : "") + "</span></span></div>";
-    h += '<div class="sub"><span><span class="dnow">' + esc(dateStr) + "</span>" + tally + "</span>" +
-         (filter === "work" ? '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button>" : "");
+    h += '</div><span class="sync ' + sync.cls + '" id="sync" title="' + esc(sync.text) + '"><span class="led"></span><span id="syncText">' + (sync.cls === "warn" ? esc(sync.text) : "") + "</span></span>";
+    if (loaded && filter !== "daily") h += '<button type="button" class="hadd" data-addopen="1" aria-label="' + (filter === "shop" ? "Add item" : "Add task") + '">' + PLUS + "</button>";
     h += "</div></header>";
+    h += '<div class="sub"><span class="dline"><span class="dnow">' + esc(dateStr) + "</span>" + tally + "</span>" +
+         (filter === "work" ? '<button class="scan' + (scanning ? " spin" : "") + '" data-scan="1"' + (scanning ? " disabled" : "") + ">" + (scanning ? SPIN + "Scanning…" : MAIL + "Scan inbox") + "</button>" : "") + "</div>";
 
     if (!loaded) { root.innerHTML = h + '<div class="empty" style="text-align:center">Loading…</div>'; return; }
     if (filter === "daily") {
@@ -467,59 +609,139 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       if (picks.length) h += "</ul></section>";
     }
 
-    (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) {
-      var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t) && !isToday(t); });
-      var older = 0;
-      if (s.key === "done" && !showOlderDone) {
-        var wk = weekAgo(), all = items.length;
-        items = items.filter(function (t) { return t.doneAt && t.doneAt >= wk; });
-        older = all - items.length;
-      }
-      var isCol = !!collapsed[s.key];
-      h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
-      h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
-           (isDoneSec(s.key) ? '<span class="count">' + items.length + "</span>" : "") + "</button>";
-      h += '<ul class="list">';
-      if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Nothing ticked off this week yet." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
-      if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
-      items.forEach(function (t) { h += taskHtml(t); });
-      h += "</ul>";
-      if (older && !isCol) h += '<button class="btn clear" data-older="1">Show ' + older + " older</button>";
-      if (s.key === "bought" && items.length && !isCol) h += '<button class="btn clear" data-clear="bought">Clear bought</button>';
-      h += "</section>";
-    });
+    if (filter === "work") h += workHtml();
+    else (filter === "shop" ? SHOP_SECS : TASK_SECS).forEach(function (s) { h += secHtml(s); });
+
     var oldIn = document.getElementById("addInput"), keep = oldIn ? oldIn.value : "", hadFocus = oldIn && document.activeElement === oldIn;
-    if (!addOpen) h += '<button type="button" class="fab" data-addopen="1" aria-label="' + (filter === "shop" ? "Add item" : "Add task") + '">+</button>';
+    if (!addOpen) h += '<button type="button" class="fab" data-addopen="1" aria-label="' + (filter === "shop" ? "Add item" : "Add task") + '">' + PLUS + "</button>";
     root.innerHTML = h;
     var newIn = document.getElementById("addInput");
     if (newIn && keep && !clearAdd) newIn.value = keep;
     clearAdd = false;
     if (newIn && hadFocus) { focusAdd = true; }
-    if (addOpen && focusAdd) { focusAdd = false; var ai = document.getElementById("addInput"); if (ai) ai.focus(); }
+    if (addOpen && focusAdd) { focusAdd = false; var ai = document.getElementById("addInput"); if (ai) { ai.focus(); showHint(ai); } }
     if (editId) { var ei = document.getElementById("edit-" + editId); if (ei && ei.closest(".task").classList.contains("editing")) { ei.focus(); ei.setSelectionRange(ei.value.length, ei.value.length); } }
+    if (openP) { var pi = document.getElementById("pedit-" + openP); if (pi && document.activeElement !== pi) pi.focus(); }
+  }
+
+  /* One task section: Now / Next / Later / Done / To buy / Bought. */
+  function secHtml(s) {
+    var items = state.tasks.filter(function (t) { return t.sec === s.key && visible(t) && !isToday(t); });
+    var older = 0;
+    if (s.key === "done" && !showOlderDone) {
+      var wk = weekAgo(), all = items.length;
+      items = items.filter(function (t) { return t.doneAt && t.doneAt >= wk; });
+      older = all - items.length;
+    }
+    var isCol = !!collapsed[s.key], h = "";
+    h += '<section data-sec="' + s.key + '" style="--c:' + s.c + '" class="' + (isCol ? "collapsed" : "") + '">';
+    h += '<button class="sec-head" data-toggle="' + s.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + s.label + "</span>" +
+         (isDoneSec(s.key) ? '<span class="count">' + items.length + "</span>" : "") + "</button>";
+    h += '<ul class="list">';
+    if (!items.length) h += '<li class="empty">' + (s.key === "done" ? "Nothing ticked off this week yet." : s.key === "bought" ? "Ticked items land here." : s.key === "shop" ? "Nothing to buy." : "Nothing here. Nice.") + "</li>";
+    if (isDoneSec(s.key)) items.sort(function (a, b) { return (b.doneAt || "").localeCompare(a.doneAt || ""); });
+    items.forEach(function (t) { h += taskHtml(t); });
+    h += "</ul>";
+    if (older && !isCol) h += '<button class="btn clear" data-older="1">Show ' + older + " older</button>";
+    if (s.key === "bought" && items.length && !isCol) h += '<button class="btn clear" data-clear="bought">Clear bought</button>';
+    return h + "</section>";
+  }
+
+  /* Work: a Timeline (Overdue / Today / This week / Coming up / Later) or Projects view, then Done. */
+  function workHtml() {
+    var open = state.tasks.filter(function (t) { return isWork(t) && !isDoneSec(t.sec) && !isShopSec(t.sec) && !isToday(t); });
+    var h = '<div class="wmode" role="group" aria-label="Group work by">' +
+      '<button type="button" data-wmode="time" aria-pressed="' + (workMode !== "proj") + '">Timeline</button>' +
+      '<button type="button" data-wmode="proj" aria-pressed="' + (workMode === "proj") + '">Projects</button></div>';
+    if (workMode === "proj") {
+      var groups = (state.projects || []).map(function (p) { return { key: "p:" + p.id, p: p, label: p.name, c: pColor(p), items: open.filter(function (t) { return t.proj === p.id; }) }; });
+      var loose = open.filter(function (t) { return !t.proj; });
+      if (loose.length) groups.push({ key: "p:", p: null, label: "No project", c: "var(--muted)", items: loose });
+      groups.forEach(function (g) {
+        var isCol = !!collapsed[g.key], items = workSort(g.items);
+        var nextDue = items.filter(function (t) { return t.due; }).map(function (t) { return t.due; }).sort()[0];
+        var hot = items.filter(function (t) { return t.due && t.due <= today(); }).length;
+        h += '<section data-sec="' + g.key + '" style="--c:' + g.c + '" class="proj' + (isCol ? " collapsed" : "") + '">';
+        h += '<div class="sec-head"><button type="button" class="sec-tog" data-toggle="' + g.key + '" aria-expanded="' + !isCol + '">' + CARET +
+             '<span class="pname"><span class="pdot"></span>' + esc(g.label) + "</span></button>" +
+             (nextDue ? '<span class="hint' + (hot ? " hot" : "") + '">' + (hot ? hot + " due" : "next " + esc(relDue(nextDue))) + "</span>" : "") +
+             '<span class="count">' + items.length + "</span>" +
+             (g.p ? '<button type="button" class="pmore" data-popen="' + g.p.id + '" aria-label="Edit project ' + esc(g.p.name) + '">' + MORE + "</button>" : "") + "</div>";
+        if (g.p && openP === g.p.id) {
+          h += '<form class="pedit" data-pform="' + g.p.id + '"><input id="pedit-' + g.p.id + '" aria-label="Project name" value="' + esc(g.p.name) + '" enterkeyhint="done">' +
+               '<div class="seg">' + PCOLORS.map(function (c, i) { return '<button type="button" class="swatch" style="--c:' + c + '" data-pcolor="' + g.p.id + '" data-n="' + i + '" aria-pressed="' + ((g.p.color || 0) === i) + '" aria-label="Colour ' + (i + 1) + '"></button>'; }).join("") + "</div>" +
+               '<div class="seg"><button class="btn btn-primary" type="submit">Save</button><button type="button" class="chip danger" data-pdel="' + g.p.id + '">Delete project</button></div></form>';
+        }
+        h += '<ul class="list">';
+        if (!items.length) h += '<li class="empty">No open tasks.</li>';
+        items.forEach(function (t) { h += taskHtml(t); });
+        h += "</ul></section>";
+      });
+      h += '<form class="r-add p-add" id="pAdd" autocomplete="off"><input id="pAddInput" type="text" placeholder="New project (e.g. Novartis W2)" aria-label="New project" enterkeyhint="done"><button class="btn" type="submit">Add</button></form>';
+    } else {
+      WBUCKETS.forEach(function (bk) {
+        var items = workSort(open.filter(function (t) { return bucketOf(t) === bk.b; }));
+        if (!items.length && (bk.b === "overdue" || bk.b === "today")) return;
+        var isCol = !!collapsed[bk.key], hint = bucketHint(bk.b);
+        h += '<section data-sec="' + bk.key + '" style="--c:' + bk.c + '" class="' + (isCol ? "collapsed" : "") + '">';
+        h += '<button class="sec-head" data-toggle="' + bk.key + '" aria-expanded="' + !isCol + '">' + CARET + '<span class="pill">' + bk.label + "</span>" +
+             (hint ? '<span class="hint">' + esc(hint) + "</span>" : "") + '<span class="count">' + items.length + "</span></button>";
+        h += '<ul class="list">';
+        if (!items.length) h += '<li class="empty">Nothing here. Nice.</li>';
+        items.forEach(function (t) { h += taskHtml(t); });
+        h += "</ul></section>";
+      });
+    }
+    return h + secHtml(SECS[3]);
   }
 
   var focusAdd = false, clearAdd = false;
+  /* Work "when" choices in the add box. Each maps to a bucket (and a date where it has one). */
+  var WHEN = [["week", "This week"], ["today", "Today"], ["tom", "Tomorrow"], ["fri", "Fri"], ["mon", "Next Mon"], ["soon", "Coming up"], ["later", "Later"]];
+  function whenToTask(k, task) {
+    if (k === "today") { task.due = today(); task.sec = "now"; }
+    else if (k === "tom") { task.due = addDays(today(), 1); task.sec = "next"; }
+    else if (k === "fri") { task.due = nextWd(5, false); task.sec = task.due === today() ? "now" : "next"; }
+    else if (k === "mon") { task.due = nextWd(1, true); task.sec = "next"; }
+    else if (k === "soon") task.sec = "next";
+    else if (k === "later") task.sec = "later";
+    else task.sec = "now";
+  }
   function addHtml() {
-    var shop = filter === "shop", label = shop ? "Add item" : "Add task";
+    var shop = filter === "shop", work = filter === "work", label = shop ? "Add item" : "Add task";
     if (!addOpen) return "";
     var h = '<form class="add" id="addForm" autocomplete="off"><div class="add-row">' +
-      '<input id="addInput" type="text" placeholder="' + (shop ? "What do you need to buy?" : "What needs doing?") + '" aria-label="' + label + '" enterkeyhint="done">' +
+      '<input id="addInput" type="text" placeholder="' + (shop ? "What do you need to buy?" : work ? "What needs doing? Try “deck @takeda fri !”" : "What needs doing?") + '" aria-label="' + label + '" enterkeyhint="done">' +
       '<button class="btn btn-primary" type="submit">Add</button><button type="button" class="x" data-addclose="1" aria-label="Close">×</button></div>';
-    if (!shop) {
+    if (work) {
+      var cur = addDue || "week";
+      h += '<div class="seg" role="group" aria-label="When">';
+      WHEN.forEach(function (w) { h += '<button type="button" class="chip" style="--c:var(--next)" data-adddue="' + w[0] + '" aria-pressed="' + (cur === w[0]) + '">' + w[1] + "</button>"; });
+      h += "</div>";
+      h += '<div class="seg" role="group" aria-label="Project">';
+      h += '<button type="button" class="chip flagchip" style="--c:var(--danger)" data-addpri="1" aria-pressed="' + addPri + '">' + FLAG + "High</button>";
+      h += '<span class="divider" aria-hidden="true"></span>';
+      (state.projects || []).forEach(function (p) { h += '<button type="button" class="chip" style="--c:' + pColor(p) + '" data-addproj="' + p.id + '" aria-pressed="' + (addProj === p.id) + '"><span class="d"></span>' + esc(p.name) + "</button>"; });
+      h += '<button type="button" class="chip" data-newproj="1">+ Project</button>';
+      h += "</div>";
+      h += '<div class="qa-hint" id="qaHint" aria-live="polite"></div>';
+    } else if (!shop) {
       h += '<div class="seg" role="group" aria-label="Add to">';
       SECS.slice(0, 3).forEach(function (s) {
         h += '<button type="button" class="chip" style="--c:' + s.c + '" data-addsec="' + s.key + '" aria-pressed="' + (addSec === s.key) + '"><span class="d"></span>' + s.label + "</button>";
       });
-      if (filter === "personal") {
-        var curTag = addTag || "Personal";
-        h += '<span class="divider" aria-hidden="true"></span>';
-        PTAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
-      }
+      var curTag = addTag || "Personal";
+      h += '<span class="divider" aria-hidden="true"></span>';
+      PTAGS.forEach(function (tg) { h += '<button type="button" class="chip" style="--c:' + tagColor(tg) + '" data-addtag="' + tg + '" aria-pressed="' + (curTag === tg) + '"><span class="d"></span>' + tg + "</button>"; });
       h += "</div>";
       h += '<div class="qa-hint" id="qaHint" aria-live="polite"></div>';
     }
     return h + "</form>";
+  }
+  function showHint(inp) {
+    var hint = document.getElementById("qaHint"); if (!hint || !inp) return;
+    var v = inp.value.trim(), q = v ? parseQuick(v) : {}, bits = v ? quickSummary(q) : [];
+    hint.innerHTML = bits.length ? bits.map(function (b) { return "<span>" + esc(b) + "</span>"; }).join("") + (q.text !== v ? "<em>→ " + esc(q.text) + "</em>" : "") : "";
   }
 
   function inboxHtml() {
@@ -531,12 +753,16 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     if (note) h += '<li class="inbox-note' + (scanWarn && scanNote ? " warn" : "") + '">' + esc(note) + "</li>";
     items.forEach(function (s) {
       var url = safeUrl(s.link);
-      h += '<li class="sugg"><div class="sugg-text">' + esc(s.text) + "</div>" +
+      var sp = s.proj ? findP(s.proj) : null;
+      h += '<li class="sugg"><div class="sugg-text">' + esc(s.text) +
+           (sp ? '<span class="pchip" style="--c:' + pColor(sp) + '"><span class="pdot"></span>' + esc(sp.name) + "</span>" : "") +
+           (s.due ? '<span class="meta' + (s.due <= today() ? " due-today" : "") + '">' + esc(relDue(s.due)) + "</span>" : "") + "</div>" +
            '<div class="sugg-src"><span>' + esc(s.source) + (s.from ? " · " + esc(s.from) : "") + "</span>" +
+           (s.why ? '<span class="why">' + esc(s.why) + "</span>" : "") +
            (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Open ↗</a>' : "") + "</div>" +
-           '<div class="seg"><button class="chip" style="--c:var(--now)" data-take="' + s.id + '" data-to="now"><span class="d"></span>Add to Now</button>' +
-           '<button class="chip" style="--c:var(--next)" data-take="' + s.id + '" data-to="next"><span class="d"></span>Next</button>' +
-           '<button class="chip" data-skip="' + s.id + '">Dismiss</button></div></li>';
+           '<div class="seg"><button class="chip" style="--c:var(--now)" data-take="' + s.id + '" data-to="now"><span class="d"></span>' + (s.due ? "Add · " + esc(relDue(s.due)) : "Add · This week") + "</button>" +
+           '<button class="chip" style="--c:var(--later)" data-take="' + s.id + '" data-to="next"><span class="d"></span>Coming up</button>' +
+           '<button class="chip" data-skip="' + s.id + '">Not mine / dismiss</button></div></li>';
     });
     h += "</ul>";
     h += '<div class="inbox-foot"><span>Checked ' + esc(ago(state.inbox.lastScan)) + "</span>" + '<button class="linkbtn" data-skipall="1">' + (items.length ? "Dismiss all" : "Hide") + "</button>" + "</div></section>";
@@ -546,10 +772,13 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   function metaHtml(t) {
     if (isDoneSec(t.sec) || isShopSec(t.sec)) return "";
     var h = "", td = today();
+    var wk = isWork(t) && filter === "work";
+    if (wk && t.pri === "high") h += '<span class="meta flag" title="High priority">' + FLAG + "</span>";
     if (t.due) {
       var cls = t.due < td ? "overdue" : t.due === td ? "due-today" : "";
-      h += '<span class="meta ' + cls + '">' + (t.due === td ? "Today" : fmtDate(t.due)) + "</span>";
+      h += '<span class="meta ' + cls + '">' + (wk ? esc(relDue(t.due)) : t.due === td ? "Today" : fmtDate(t.due)) + "</span>";
     }
+    if (wk && t.proj && workMode !== "proj") { var p = findP(t.proj); if (p) h += '<span class="pchip" style="--c:' + pColor(p) + '"><span class="pdot"></span>' + esc(p.name) + "</span>"; }
     if (t.every) h += '<span class="meta" title="Repeats">↻</span>';
     if (t.sec === "now" && t.nowSince) { var age = daysBetween(t.nowSince, td); if (age >= 10) h += '<span class="meta stuck">stuck ' + age + "d</span>"; }
     return h;
@@ -567,10 +796,18 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
          (inToday ? "" : '<button class="grip" type="button" data-grip="' + t.id + '" aria-label="Drag to reorder">' + GRIP + "</button>") + "</div>";
     h += '<div class="actions">';
     if (!done && !shopItem) h += '<button class="chip" style="--c:var(--next);color:var(--next);border-color:color-mix(in srgb,var(--next) 45%,transparent)" data-snooze="' + t.id + '">Tomorrow \u2192</button>';
-    if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
+    var wkT = isWork(t) && filter === "work";
+    if (!done && !shopItem && wkT) WBUCKETS.forEach(function (bk) { if (bk.b !== "overdue" && bk.b !== bucketOf(t)) h += '<button class="chip" style="--c:' + bk.c + '" data-bucket="' + t.id + '" data-to="' + bk.b + '"><span class="d"></span>' + bk.label + "</button>"; });
+    else if (!done && !shopItem) SECS.slice(0, 3).forEach(function (m) { if (m.key !== t.sec) h += '<button class="chip" style="--c:' + m.c + '" data-move="' + t.id + '" data-to="' + m.key + '"><span class="d"></span>' + m.label + "</button>"; });
     h += '<button class="chip" data-edit="' + t.id + '">' + (shopItem || done ? "Edit" : "Edit · date · repeat") + "</button>" + '<button class="chip danger" data-del="' + t.id + '">Delete</button>';
     if (!done && !shopItem) {
       h += '<span style="width:100%"></span>';
+      if (wkT) {
+        h += '<button class="chip flagchip" style="--c:var(--danger)" data-setpri="' + t.id + '" aria-pressed="' + (t.pri === "high") + '">' + FLAG + "High priority</button>";
+        h += '<span style="width:100%"></span>';
+        (state.projects || []).forEach(function (p) { h += '<button class="chip" style="--c:' + pColor(p) + '" data-setproj="' + t.id + '" data-p="' + p.id + '" aria-pressed="' + (t.proj === p.id) + '"><span class="d"></span>' + esc(p.name) + "</button>"; });
+        h += '<span style="width:100%"></span>';
+      }
       if (filter === "personal") PTAGS.forEach(function (tg) { h += '<button class="chip" style="--c:' + tagColor(tg) + '" data-settag="' + t.id + '" data-tag="' + tg + '" aria-pressed="' + ((t.tag || "Personal") === tg) + '"><span class="d"></span>' + tg + "</button>"; });
       h += '<button class="chip" data-settag="' + t.id + '" data-tag="' + (isWork(t) ? "Personal" : "Work") + '">→ ' + (isWork(t) ? "Personal" : "Work") + "</button>";
       h += '<button class="chip" data-toshop="' + t.id + '">→ Shop</button>';
@@ -680,15 +917,12 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     if (snap.metadata && snap.metadata.hasPendingWrites) return;
     if (writing || dirty) return;
     var first = !loaded; loaded = true;
-    if (!snap.exists) { if (first) { normalize(); render(); } return; }
+    if (!snap.exists) { if (first) { fixState(); normalize(); render(); } return; }
     var incoming = JSON.parse(JSON.stringify(snap.data()));
     if (!first && stable(incoming) === stable(state)) return;
+    var before = stable(incoming);
     state = incoming;
-    if (!state.tasks) state.tasks = [];
-    if (!state.inbox) state.inbox = { lastScan: null, items: [] };
-    if (!state.routines) state.routines = [];
-    if (!state.log) state.log = {};
-    var before = stable(state); normalize();
+    fixState(); normalize();
     render();
     if (stable(state) !== before) changed();
   }
@@ -776,14 +1010,73 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       if (r[0].status === "rejected" && r[1].status === "rejected") throw r[0].reason;
       var meets = r[0].status === "fulfilled" ? (r[0].value.meetings || []) : [];
       var notes = r[1].status === "fulfilled" ? (r[1].value.notes || []) : [];
-      notes.forEach(function (n) { out.push({ source: "Wispr note", from: n.title || "Note", subject: "", text: n.content_excerpt || "", link: "", at: n.modified_at || "" }); });
+      notes.forEach(function (n) { out.push({ key: "n:" + (n.id || n.title || ""), source: "Wispr note", from: n.title || "Note", subject: "", text: n.content_excerpt || "", link: "", at: n.modified_at || "", kind: "his own dictated note" }); });
       return Promise.all(meets.slice(0, 6).map(function (mt) {
+        var owner = mt.owner && mt.owner.name, shared = !!mt.shared;
         return flowCall(mcp, "get_meeting", { meeting_id: mt.id, view_content: { char_limit: 1 } })
           .then(function (full) { return nextSteps((full && full.summary) || mt.content_excerpt || ""); }, function () { return mt.content_excerpt || ""; })
-          .then(function (txt) { out.push({ source: "Meeting", from: mt.title || "Meeting", subject: "", text: txt, link: mt.share_link || "", at: mt.start || "" }); });
+          .then(function (txt) {
+            out.push({ key: "m:" + mt.id, source: "Meeting", from: mt.title || "Meeting", subject: "", text: txt, link: mt.share_link || "", at: mt.start || "",
+                       kind: shared ? "meeting notes written by " + (owner || "someone else") + " (not Praveen)" : "his own meeting notes" });
+          });
       })).then(function () { return out; });
     });
   }
+
+  /* ---------- Who is this for? ---------- */
+  var ME = /\b(praveen|raamanaathan|prav)\b/i;
+  var NOT_NAMES = /^(hi|hey|hello|dear|team|all|everyone|folks|guys|both|thanks|thank|ok|okay|sure|yes|no|please|pls|fyi|update|note|good|morning|evening|afternoon|great|done|noted|any|also|just|so|and|the|this|that|we|i|you|re|fw|fwd|meeting|call|reminder|urgent|important|question|quick|heads|attention|action|status|agenda|summary|today|tomorrow|well|right|cool|nice|perfect|awesome|got|alright|hmm|yeah|yep|yup|nope|sorry|apologies|congrats|congratulations|welcome|regards|cheers|kindly|request|hii|hiii|morning|monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i;
+  /* A message that opens "Hi Akash," or "@Akash" or "Akash -" is for Akash. Returns the names it is addressed to, or []. */
+  function addressees(text) {
+    var t = String(text || "").trim(), names = [], m;
+    /* With a greeting ("Hi Akash:") any punctuation counts; a bare first word needs a comma or dash ("Akash, can you…"), so "Reminder: …" is not a name. */
+    var greet = /^(?:hi|hey|hello|dear|thanks|thank you|ok|okay|sure)\s+@?([A-Z][a-zA-Z]+)(?:\s+(?:and|&)\s+@?([A-Z][a-zA-Z]+))?\s*[,:\-–!]/i;
+    var bare = /^@?([A-Z][a-zA-Z]+)(?:\s+(?:and|&)\s+@?([A-Z][a-zA-Z]+))?\s*[,\-–]\s/;
+    if ((m = t.match(greet)) || (m = t.match(bare))) [m[1], m[2]].forEach(function (n) { if (n && !NOT_NAMES.test(n)) names.push(n); });
+    var at = /@([A-Z][a-zA-Z]+)/g;
+    while ((m = at.exec(t))) if (!NOT_NAMES.test(m[1]) && names.indexOf(m[1]) < 0) names.push(m[1]);
+    return names;
+  }
+  function chatKind(id) {
+    id = String(id || "");
+    if (/@unq\.gbl\.spaces$/.test(id) || /^19:[0-9a-f-]{36}_[0-9a-f-]{36}/.test(id)) return "1:1 chat with Praveen";
+    if (/thread\.tacv2/.test(id)) return "team channel";
+    if (/meeting_/.test(id)) return "meeting chat";
+    return "group chat";
+  }
+
+  /* ---------- Have we got this already? ---------- */
+  var STOPW = ("a an the to for of and or with on in at by from my me i is be it its this that up out about re fw fwd please pls kindly " +
+    "can could would will should need needs we us our you your them their his her he she they asap today tomorrow get got do done make check").split(" ");
+  function stem(w) { return w.replace(/(ings|ing|ed|es|s)$/, "").replace(/(.)\1$/, "$1"); }
+  function toks(s) {
+    var out = {};
+    String(s || "").toLowerCase().replace(/[’']/g, "").split(/[^a-z0-9]+/).forEach(function (w) {
+      if (!w || STOPW.indexOf(w) >= 0 || (w.length < 3 && !/\d/.test(w))) return;
+      out[stem(w)] = 1;
+    });
+    return Object.keys(out);
+  }
+  /* Same task if most of the shorter one's key words appear in the other ("Send Kapil the deck" ~ "Deck to Kapil"). */
+  function similar(a, b) {
+    var A = toks(a), B = toks(b); if (!A.length || !B.length) return false;
+    var hit = A.filter(function (w) { return B.indexOf(w) >= 0; }).length, n = Math.min(A.length, B.length);
+    return n <= 2 ? hit >= n : hit / n >= 0.6 && hit >= 2;
+  }
+  function knownTexts() {
+    var cutoff = addDays(today(), -30), out = [];
+    state.tasks.forEach(function (t) { if (isShopSec(t.sec)) return; if (!isDoneSec(t.sec) || (t.doneAt && t.doneAt >= cutoff)) out.push(t.text); });
+    (state.inbox.items || []).forEach(function (s) { out.push(s.text); });
+    (state.inbox.dismissed || []).forEach(function (s) { out.push(s.t); });
+    return out;
+  }
+  function remember(text) {
+    var d = state.inbox.dismissed || (state.inbox.dismissed = []);
+    d.push({ t: String(text).slice(0, 120), at: today() });
+    var cutoff = addDays(today(), -60);
+    state.inbox.dismissed = d.filter(function (x) { return x.at >= cutoff; }).slice(-150);
+  }
+  function hashKey(s) { var h = 5381; s = String(s); for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
 
   function scan() {
     if (scanning) return;
@@ -792,7 +1085,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     var threeDays = new Date(Date.now() - 3 * 86400000).toISOString();
     var since = state.inbox.lastScan || threeDays;
     var sinceFlow = state.inbox.lastScanFlow || threeDays;
-    var mcp, sample;
+    var mcp, sample, seen = state.inbox.seen || (state.inbox.seen = {});
     var use = window.claude && window.claude.use;
     (use ? Promise.all([use("mcp"), use("sample")]) : Promise.reject({ code: "not_granted" })).then(function (r) {
       mcp = r[0]; sample = r[1];
@@ -803,15 +1096,15 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
         fetchFlow(mcp, sinceFlow)
       ]);
     }).then(function (res) {
-      var msgs = [], fails = [], counts = [0, 0, 0];
+      var msgs = [], fails = [], counts = [0, 0, 0], skippedOthers = 0;
       var names = ["email", "Teams", "Wispr Flow"], servers = [M365, M365, FLOW];
       if (res[0].status === "fulfilled") res[0].value.forEach(function (m) { counts[0]++;
-        msgs.push({ source: "Email", from: m.senderName || m.sender || "", subject: m.subject || "", text: m.summary || "", link: m.webLink || "" });
+        msgs.push({ key: "e:" + (m.id || m.internetMessageId || m.subject), source: "Email", from: m.senderName || m.sender || "", subject: m.subject || "", text: m.summary || "", link: m.webLink || "", at: m.receivedDateTime || "", kind: "email" });
       });
       if (res[1].status === "fulfilled") res[1].value.forEach(function (m) { counts[1]++;
-        var fromName = (m.from && m.from.displayName) || "";
-        if (/^praveen raamanaathan$/i.test(fromName)) fromName = "Praveen (you)";
-        msgs.push({ source: "Teams", from: fromName, subject: m.subject || "", text: m.summary || "", link: m.webUrl || "" });
+        var fromName = (m.from && m.from.displayName) || "", mine = ME.test(fromName);
+        msgs.push({ key: "t:" + (m.id || m.webUrl), source: "Teams", from: mine ? "Praveen (you)" : fromName, mine: mine, subject: m.subject || "", text: m.summary || "",
+                    link: m.webUrl || "", at: m.createdDateTime || "", chat: m.chatId || "", kind: chatKind(m.chatId) });
       });
       if (res[2].status === "fulfilled") res[2].value.forEach(function (m) { counts[2]++; msgs.push(m); });
       res.forEach(function (x, i) { if (x.status !== "fulfilled") fails.push(i); });
@@ -823,33 +1116,85 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
         res[2].status === "fulfilled" ? counts[2] + " Wispr Flow item" + (counts[2] === 1 ? "" : "s") : "no Wispr Flow"
       ].join(", ") + ". ";
       var flowOk = res[2].status === "fulfilled";
-      if (!msgs.length) return { found: [], msgs: msgs, partial: partial, read: read, flowOk: flowOk };
-      var existing = state.tasks.filter(function (t) { return t.sec !== "done" && t.sec !== "bought"; }).map(function (t) { return "- " + t.text; })
-        .concat((state.inbox.items || []).map(function (s) { return "- " + s.text; })).join("\n");
-      var list = msgs.map(function (m, i) {
-        return "[" + i + "] " + m.source + (m.source === "Meeting" ? ": " : " from ") + (m.from || "unknown") + (m.subject ? " | subject: " + m.subject : "") + " | " +
-          m.text.replace(/\s+/g, " ").slice(0, m.source === "Meeting" ? 1500 : 300);
+
+      /* Keep each Teams message next to the rest of its conversation, and mark who it is addressed to. */
+      var byChat = {};
+      msgs.forEach(function (m) { if (m.chat) (byChat[m.chat] = byChat[m.chat] || []).push(m); });
+      msgs.forEach(function (m) {
+        var to = m.source === "Teams" || m.source === "Email" ? addressees(m.text) : [];
+        var toOthers = to.filter(function (n) { return !ME.test(n); });
+        m.to = to.some(function (n) { return ME.test(n); }) ? "Praveen" : toOthers.join(", ");
+        m.forOthers = !!toOthers.length && !ME.test(m.text);
+      });
+      /* Already looked at in an earlier scan? Skip. Addressed by name to someone else and Praveen not mentioned? Skip. */
+      var fresh = msgs.filter(function (m) {
+        if (seen[hashKey(m.key)]) return false;
+        if (m.forOthers && !m.mine) { skippedOthers++; return false; }
+        return true;
+      });
+      var markSeen = function () {
+        msgs.forEach(function (m) { seen[hashKey(m.key)] = today(); });
+        var cutoff = addDays(today(), -21);
+        Object.keys(seen).forEach(function (k) { if (seen[k] < cutoff) delete seen[k]; });
+      };
+      if (!fresh.length) return { found: [], msgs: fresh, partial: partial, read: read, flowOk: flowOk, markSeen: markSeen, skippedOthers: skippedOthers };
+
+      var known = knownTexts();
+      var existing = known.slice(0, 200).map(function (t) { return "- " + t; }).join("\n");
+      var projects = (state.projects || []).map(function (p) { return p.name; }).join(", ");
+      var order = [], seenChat = {};
+      fresh.forEach(function (m, i) { m.i = i; });
+      fresh.forEach(function (m) {
+        if (m.chat) { if (seenChat[m.chat]) return; seenChat[m.chat] = 1; order.push({ head: "Teams " + m.kind, items: byChat[m.chat].filter(function (x) { return fresh.indexOf(x) >= 0; }) }); }
+        else order.push({ head: null, items: [m] });
+      });
+      var list = order.map(function (g) {
+        var lines = g.items.slice().sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); }).map(function (m) {
+          return "[" + m.i + "] " + m.source + " (" + m.kind + ")" + (m.source === "Meeting" ? ": " : " from ") + (m.from || "unknown") +
+            (m.to ? " | addressed to: " + m.to : "") + (m.subject ? " | subject: " + m.subject : "") + (m.at ? " | " + String(m.at).slice(0, 10) : "") + " | " +
+            m.text.replace(/\s+/g, " ").slice(0, m.source === "Meeting" ? 1500 : 350);
+        });
+        return (g.head ? "--- " + g.head + " ---\n" : "") + lines.join("\n");
       }).join("\n");
-      var prompt = "You help Praveen Raamanaathan (Senior Associate at ZoomRx, a pharma market-research company) keep his to-do list.\n" +
-        "Below are his recent work emails, Microsoft Teams messages, and Wispr Flow items (recorded meeting next steps and his own dictated notes). Pick out ONLY concrete action items that Praveen himself needs to do: direct requests to him, reminders of things pending on him, deadlines, follow-ups he owes.\n" +
-        "Meeting next steps name an owner in parentheses: include one only if the owner is Praveen, or it is a ZoomRx/team item with no other named person. Wispr notes are his own jottings: include clear to-dos from them.\n" +
-        "Ignore: newsletters, marketing, webinars, automated birthday/holiday greetings, general FYIs, messages that need nothing from him, and anything already on his list below.\n" +
-        "Merge duplicates (e.g. repeated reminders about the same thing) into one item. Messages marked 'Praveen (you)' are his own: include a task only if he promised to do something.\n\n" +
-        "His current list:\n" + (existing || "(empty)") + "\n\nItems:\n" + list + "\n\n" +
-        'Reply with JSON only: an array (at most 10) of {"text": short imperative task, max 70 characters, "ref": index of the main source item}. Reply [] if there are none.';
+      var prompt = "You help Praveen Raamanaathan (Senior Associate at ZoomRx, a pharma market-research company) keep his work to-do list. Today is " + today() + ".\n" +
+        "Below are his recent emails, Microsoft Teams messages (grouped by conversation, oldest first) and Wispr Flow items. Pick out ONLY concrete action items that Praveen HIMSELF must do.\n\n" +
+        "Who it is for — be strict:\n" +
+        "- Include: a request made directly to Praveen (1:1 chat, his name, 'you' in a 1:1 chat, an email clearly asking him), something he promised to do in his own message ('Praveen (you)'), a deadline that is on him, or a to-do in his own dictated note or his own meeting notes owned by him.\n" +
+        "- Exclude anything addressed to or owned by someone else: 'Hi Akash, …', '@Rokesh please…', another person replying 'Sure, will do', meeting next steps with another owner in parentheses, notes written by someone else unless they name Praveen as the owner.\n" +
+        "- In group chats and channels, 'you'/'team'/'can someone' is NOT Praveen unless the conversation shows the question was put to him or he took it on.\n" +
+        "- Exclude newsletters, notifications that need nothing, greetings, FYIs, and other people's status updates.\n" +
+        "- When unsure whether it is his, leave it out.\n\n" +
+        "Duplicates — be strict: his list below already has these tasks, including ones he typed in himself in his own words and ones he finished or dismissed. If an item is the same piece of work as anything on the list, even worded differently or only part of it, leave it out. Merge repeated reminders about the same thing into one item.\n\n" +
+        "His projects: " + (projects || "(none)") + ".\n\n" +
+        "His list (open, recently done, and dismissed):\n" + (existing || "(empty)") + "\n\nItems:\n" + list + "\n\n" +
+        'Reply with JSON only: an array (at most 10) of {"text": short imperative task, max 70 characters, "ref": index of the main source item, ' +
+        '"owner": who must do it ("Praveen" or the other person\'s name), "evidence": max 8 words quoted or paraphrased showing it is his, ' +
+        '"same_as": the matching line from his list if it duplicates one, else null, "project": one of his project names or null, "due": "YYYY-MM-DD" if a deadline is stated, else null}. ' +
+        "Reply [] if there are none.";
       return sample.json(prompt).catch(function (e) { throw { sample: true, code: e && e.code, message: e && e.message }; })
-        .then(function (v) { return { found: Array.isArray(v) ? v : (v && v.items) || [], msgs: msgs, partial: partial, read: read, flowOk: flowOk }; });
+        .then(function (v) { return { found: Array.isArray(v) ? v : (v && v.items) || [], msgs: fresh, partial: partial, read: read, flowOk: flowOk, markSeen: markSeen, skippedOthers: skippedOthers, known: known }; });
     }).then(function (r) {
-      var n = 0;
+      var n = 0, dropped = 0, known = (r.known || []).slice();
       r.found.forEach(function (f) {
         if (!f || !f.text) return;
-        var m = r.msgs[f.ref] || {};
-        state.inbox.items.push({ id: "s" + (state.nextId++), text: String(f.text).slice(0, 120), source: m.source || "Inbox", from: m.from || "", link: m.link || "" });
+        var text = String(f.text).slice(0, 120), m = r.msgs[f.ref] || {};
+        /* Second check on Claude's answer: drop anything owned by someone else, flagged as a repeat, or close to a task already on the list. */
+        if ((f.owner && !ME.test(String(f.owner)) && !/^(me|myself|you)$/i.test(String(f.owner))) || f.same_as ||
+            known.some(function (k) { return similar(text, k); })) { dropped++; return; }
+        var pj = f.project ? projByPrefix(String(f.project)) : null;
+        var item = { id: "s" + (state.nextId++), text: text, source: m.source || "Inbox", from: m.from || "", link: m.link || "" };
+        if (pj) item.proj = pj.id;
+        if (f.due && /^\d{4}-\d{2}-\d{2}$/.test(f.due) && f.due >= addDays(today(), -7)) item.due = f.due;
+        if (f.evidence) item.why = String(f.evidence).slice(0, 80);
+        state.inbox.items.push(item); known.push(text);
         n++;
       });
+      if (r.markSeen) r.markSeen();
       state.inbox.lastScan = started;
       if (r.flowOk) state.inbox.lastScanFlow = started;
-      scanNote = r.read + (n ? n + " new action item" + (n === 1 ? "" : "s") + " found." : "Nothing new that needs you.") + r.partial;
+      var filtered = (r.skippedOthers || 0) + dropped;
+      scanNote = r.read + (n ? n + " new action item" + (n === 1 ? "" : "s") + " for you." : "Nothing new that needs you.") +
+        (filtered ? " Skipped " + filtered + " meant for others or already on your list." : "") + r.partial;
       scanWarn = !!r.partial; scanning = false; state.inbox.note = scanNote;
       changed();
     }).catch(function (e) {
@@ -859,6 +1204,18 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
         : mcpMessage(e, M365);
       render();
     });
+  }
+
+  /* Opening the add box always works: it is reachable from the header button and the floating one,
+     clears any half-finished drag that could block taps, and scrolls the box into view. */
+  function openAdd() {
+    if (drag) endDrag(true);
+    document.body.classList.remove("dragging");
+    suppressClick = false;
+    if (filter === "daily") { filter = "personal"; lsSet("tasks-filter", filter); }
+    addOpen = true; focusAdd = true; render();
+    var f = document.getElementById("addForm");
+    if (f) { try { f.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
   }
 
   document.getElementById("toastUndo").addEventListener("click", function () {
@@ -881,8 +1238,24 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       if (n3 >= 3) { showToast("Today already has 3. Remove one first.", null); return; }
       st.star = today(); openId = null; changed(); return;
     }
-    if (d.addopen) { addOpen = true; focusAdd = true; render(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
-    if (d.addclose) { addOpen = false; addTag = null; render(); return; }
+    if (d.addopen) { openAdd(); return; }
+    if (d.addclose) { addOpen = false; addTag = null; addDue = null; addProj = null; addPri = false; render(); return; }
+    if (d.wmode) { workMode = d.wmode; lsSet("tasks-workmode", workMode); openId = null; openP = null; render(); return; }
+    if (d.adddue) { addDue = d.adddue; focusAdd = true; render(); return; }
+    if (d.addpri) { addPri = !addPri; focusAdd = true; render(); return; }
+    if (d.addproj) { addProj = addProj === d.addproj ? null : d.addproj; focusAdd = true; render(); return; }
+    if (d.newproj) { workMode = "proj"; lsSet("tasks-workmode", workMode); addOpen = false; render(); var pa = document.getElementById("pAddInput"); if (pa) { pa.scrollIntoView({ block: "center" }); pa.focus(); } return; }
+    if (d.popen) { openP = openP === d.popen ? null : d.popen; render(); return; }
+    if (d.pcolor) { var pc = findP(d.pcolor); if (pc) { pc.color = +d.n; changed(); } return; }
+    if (d.pdel) {
+      var snapP = snapshot(), pd = findP(d.pdel);
+      state.projects = state.projects.filter(function (x) { return x.id !== d.pdel; });
+      state.tasks.forEach(function (x) { if (x.proj === d.pdel) delete x.proj; });
+      openP = null; showToast("Deleted project: " + (pd ? pd.name : ""), snapP); changed(); return;
+    }
+    if (d.bucket) { var bt = find(d.bucket); if (bt) { var snB = snapshot(); if (moveToBucket(bt, d.to)) { openId = null; showToast("Moved to " + WBUCKETS.filter(function (x) { return x.b === d.to; })[0].label + ": " + bt.text, snB); changed(); } } return; }
+    if (d.setpri) { var sp = find(d.setpri); if (sp) { if (sp.pri === "high") delete sp.pri; else sp.pri = "high"; changed(); } return; }
+    if (d.setproj) { var sj = find(d.setproj); if (sj) { if (sj.proj === d.p) delete sj.proj; else sj.proj = d.p; changed(); } return; }
     if (d.rtap) { var rt = findR(d.rtap); if (rt) { var k0 = keyFor(0), c0 = rcount(rt, k0); rset(rt, k0, c0 >= rt.times ? 0 : c0 + 1); changed(); } return; }
     if (d.rdot) { var rd = findR(d.rdot); if (rd) { var kd = keyFor(dayOffset), cd = rcount(rd, kd), ii = +d.i; rset(rd, kd, cd > ii ? ii : ii + 1); changed(); } return; }
     if (d.day) { dayOffset = Math.min(0, Math.max(-60, dayOffset + (+d.day))); openR = null; editR = null; render(); return; }
@@ -905,12 +1278,18 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     if (d.take) {
       var snapT = snapshot(), s = null;
       state.inbox.items = state.inbox.items.filter(function (x) { if (x.id === d.take) { s = x; return false; } return true; });
-      if (s) { state.tasks.unshift({ id: s.id.replace(/^s/, "t"), text: s.text, sec: d.to, tag: "Work" }); showToast("Added to " + (d.to === "now" ? "Now" : "Next") + ": " + s.text, snapT); }
+      if (s) {
+        var nt = { id: s.id.replace(/^s/, "t"), text: s.text, sec: d.to, tag: "Work" };
+        if (s.proj && findP(s.proj)) nt.proj = s.proj;
+        if (s.due && d.to === "now") nt.due = s.due;
+        state.tasks.unshift(nt); normalize();
+        showToast("Added to " + WBUCKETS.filter(function (x) { return x.b === bucketOf(nt); })[0].label + ": " + s.text, snapT);
+      }
       if (!state.inbox.items.length) scanNote = null;
       changed(); return;
     }
-    if (d.skip) { state.inbox.items = state.inbox.items.filter(function (x) { return x.id !== d.skip; }); if (!state.inbox.items.length) scanNote = null; changed(); return; }
-    if (d.skipall) { var snapS = snapshot(); state.inbox.items = []; scanNote = null; delete state.inbox.note; showToast("Dismissed inbox suggestions", snapS); changed(); return; }
+    if (d.skip) { state.inbox.items = state.inbox.items.filter(function (x) { if (x.id === d.skip) { remember(x.text); return false; } return true; }); if (!state.inbox.items.length) scanNote = null; changed(); return; }
+    if (d.skipall) { var snapS = snapshot(); state.inbox.items.forEach(function (x) { remember(x.text); }); state.inbox.items = []; scanNote = null; delete state.inbox.note; showToast("Dismissed inbox suggestions", snapS); changed(); return; }
     if (d.check) {
       var t = find(d.check); if (!t) return;
       var snap = snapshot();
@@ -941,9 +1320,7 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   root.addEventListener("mousedown", function (ev) { if (ev.target.closest(".add .chip")) ev.preventDefault(); });
   root.addEventListener("input", function (ev) {
     if (ev.target.id !== "addInput") return;
-    var hint = document.getElementById("qaHint"); if (!hint) return;
-    var v = ev.target.value.trim(), q = v ? parseQuick(v) : {}, bits = v ? quickSummary(q) : [];
-    hint.innerHTML = bits.length ? bits.map(function (b) { return "<span>" + esc(b) + "</span>"; }).join("") + (q.text !== v ? "<em>→ " + esc(q.text) + "</em>" : "") : "";
+    showHint(ev.target);
   });
   root.addEventListener("submit", function (ev) {
     ev.preventDefault();
@@ -952,6 +1329,16 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
       var rv = (document.getElementById("rAddInput").value || "").trim(); if (!rv) return;
       state.routines.push({ id: "r" + (state.nextId++), name: rv, times: 1 }); changed();
       var ra = document.getElementById("rAddInput"); if (ra) ra.focus(); return;
+    }
+    if (f.id === "pAdd") {
+      var pv = (document.getElementById("pAddInput").value || "").trim(); if (!pv) return;
+      if (projByPrefix(pv) && projByPrefix(pv).name.toLowerCase() === pv.toLowerCase()) { showToast("You already have " + pv, null); return; }
+      state.projects.push({ id: "p" + (state.nextId++), name: pv.slice(0, 40), color: state.projects.length % PCOLORS.length }); changed();
+      var pa2 = document.getElementById("pAddInput"); if (pa2) pa2.focus(); return;
+    }
+    if (f.dataset && f.dataset.pform) {
+      var pp = findP(f.dataset.pform), pn = (f.querySelector("input").value || "").trim();
+      if (pp && pn) pp.name = pn.slice(0, 40); openP = null; changed(); return;
     }
     if (f.dataset && f.dataset.rform) {
       var rr = findR(f.dataset.rform), nv = (f.querySelector("input").value || "").trim();
@@ -973,11 +1360,17 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     var snapA = snapshot(), q = filter === "shop" ? { text: text } : parseQuick(text), bits = filter === "shop" ? [] : quickSummary(q);
     var task = { id: "t" + (state.nextId++), text: q.text, sec: filter === "shop" ? "shop" : addSec };
     if (filter !== "shop") task.tag = q.tag || (filter === "work" ? "Work" : (addTag || "Personal"));
+    if (filter === "work" && task.tag === "Work") {
+      whenToTask(addDue || "week", task);
+      var pj = q.proj || addProj; if (pj) task.proj = pj;
+      if (q.pri || addPri) task.pri = "high";
+    }
     if (q.due) { task.due = q.due; if (q.due <= today()) task.sec = "now"; else if (task.sec === "now") task.sec = "next"; }
     if (q.every) task.every = q.every;
     state.tasks.unshift(task);
     if (collapsed[task.sec]) { collapsed[task.sec] = false; saveCollapsed(); }
-    if (bits.length) showToast("Added to " + task.sec.charAt(0).toUpperCase() + task.sec.slice(1) + " · " + bits.join(" · ") + ((filter === "work") !== (task.tag === "Work") ? " (on " + (task.tag === "Work" ? "Work" : "Personal") + ")" : ""), snapA);
+    var where = task.tag === "Work" && filter === "work" ? WBUCKETS.filter(function (x) { return x.b === bucketOf(task); })[0].label : task.sec.charAt(0).toUpperCase() + task.sec.slice(1);
+    if (bits.length || filter === "work") showToast("Added to " + where + (bits.length ? " · " + bits.join(" · ") : "") + ((filter === "work") !== (task.tag === "Work") ? " (on " + (task.tag === "Work" ? "Work" : "Personal") + ")" : ""), snapA);
     focusAdd = true; clearAdd = true; changed();
   });
 
@@ -1055,6 +1448,20 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
     var t = find(d.id);
     if (cancel || !sec || !t) { render(); return; }
     var before = snapshot(), prev = t.sec;
+    /* Work timeline buckets and project cards: change the date or project, then reorder. */
+    if (sec.indexOf("w:") === 0 || sec.indexOf("p:") === 0) {
+      if (sec.indexOf("w:") === 0 && !moveToBucket(t, sec.slice(2))) { render(); return; }
+      if (sec.indexOf("p:") === 0) { if (sec.length > 2) t.proj = sec.slice(2); else delete t.proj; }
+      if (beforeId && beforeId !== t.id) {
+        state.tasks = state.tasks.filter(function (x) { return x !== t; });
+        for (var bi = 0; bi < state.tasks.length; bi++) if (state.tasks[bi].id === beforeId) { state.tasks.splice(bi, 0, t); break; }
+        if (state.tasks.indexOf(t) < 0) state.tasks.push(t);
+      }
+      openId = null; editId = null;
+      if (snapshot() === before) { render(); return; }
+      var lbl = sec.indexOf("w:") === 0 ? WBUCKETS.filter(function (x) { return x.key === sec; })[0].label : (findP(sec.slice(2)) || { name: "No project" }).name;
+      showToast("Moved to " + lbl + ": " + t.text, before); changed(); return;
+    }
     state.tasks = state.tasks.filter(function (x) { return x !== t; });
     if (isDoneSec(sec) && !isDoneSec(prev)) { t.from = prev; t.doneAt = today(); if (sec === "done") spawnRepeat(t); }
     if (!isDoneSec(sec) && isDoneSec(prev)) { delete t.from; delete t.doneAt; }
@@ -1071,6 +1478,9 @@ body.dragging .fab { pointer-events: none; opacity: .3; }
   }
   document.addEventListener("pointerup", function () { cancelPress(); if (drag) endDrag(false); });
   document.addEventListener("pointercancel", function () { cancelPress(); if (drag) endDrag(true); });
+  /* Phones: the webview sometimes swallows pointerup after a drag. End it on touchend too, so the page never stays in drag mode (which blocked the add button). */
+  document.addEventListener("touchend", function (ev) { if (drag && (!ev.touches || !ev.touches.length)) endDrag(!drag.moved); });
+  document.addEventListener("touchcancel", function () { if (drag) endDrag(true); });
 
   /* Swipe a row: right = done, left = tomorrow. Vertical moves are left to the page scroll. */
   /* Touch events drive swipes on phones (pointer events get cancelled inside the app's webview); the mouse uses pointer events. */
